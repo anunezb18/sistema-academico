@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación - AWUIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .confirmation-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 60px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4dd0e1, #00acc1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px;
+            font-size: 40px;
+        }
+
+        .success-icon::before {
+            content: "✓";
+            color: white;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .message {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .details {
+            background: #f5f5f5;
+            border-left: 4px solid #00acc1;
+            padding: 15px;
+            margin-bottom: 40px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .details p {
+            color: #555;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .details strong {
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        form {
+            margin: 0;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4dd0e1, #00acc1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 172, 193, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #00acc1;
+            border: 2px solid #00acc1;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+
+        @media (max-width: 600px) {
+            .confirmation-container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmation-container">
+        <div class="success-icon"></div>
+        <h1>¡Formulario Enviado!</h1>
+        <p class="message" th:text="${message}"></p>
+
+        <div class="details" th:if="${formularioId}">
+            <p><strong>ID del Formulario:</strong> <span th:text="${formularioId}"></span></p>
+            <p><strong>Estado:</strong> Pendiente de revisión</p>
+            <p><strong>Pronto recibirá noticias sobre el estado de su solicitud.</strong></p>
+        </div>
+
+        <div class="button-group">
+            <form method="post" th:action="@{/formulario/confirmacion}">
+                <button type="submit" class="btn btn-primary">Aceptar</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+

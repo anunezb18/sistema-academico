@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWUIS - Iniciar Sesión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            display: flex;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        .left-panel {
+            background: linear-gradient(180deg, #80deea 0%, #4dd0e1 100%);
+            padding: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+
+        .logo-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-text {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .logo-text .a {
+            color: #FDD835;
+        }
+
+        .logo-text .w {
+            color: #FF6B6B;
+        }
+
+        .logo-text .u {
+            color: #4ECDC4;
+        }
+
+        .logo-text .i {
+            color: #95E1D3;
+        }
+
+        .logo-text .s {
+            color: #FFA07A;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .kids-illustration {
+            margin-top: 30px;
+            font-size: 3em;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        .right-panel h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .welcome-text {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #4dd0e1;
+            box-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
+        }
+
+        .input-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            color: #999;
+        }
+
+        .input-wrapper input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #999;
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, #FDD835 0%, #F9A825 100%);
+            color: #333;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(253, 216, 53, 0.3);
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(253, 216, 53, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .forgot-password a {
+            color: #4dd0e1;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                padding: 30px;
+            }
+
+            .right-panel {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="left-panel">
+            <div class="logo-container">
+                <div class="logo-text">
+                    <span class="a">A</span><span class="w">W</span><span class="u">U</span><span class="i">I</span><span class="s">S</span>
+                </div>
+                <div style="color: #333; font-size: 0.9em; font-weight: normal;">
+                    Jardín Infantil
+                </div>
+                <div style="color: #4dd0e1; font-size: 0.85em; margin-top: 5px; font-weight: bold;">
+                    Arte y Aprendizaje
+                </div>
+            </div>
+            <div class="kids-illustration">
+                👧🧒👦👶
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2>Inicia sesión</h2>
+            <p class="welcome-text">¡Bienvenidos a Awuis!</p>
+
+            <form action="#" method="post">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                        </svg>
+                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <input type="password" name="password" placeholder="Contraseña" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-button">Iniciar sesión</button>
+
+                <div class="forgot-password">
+                    <a href="#">Recordar contraseña</a>
+                </div>
+
+                <div style="text-align:center; margin-top:20px; border-top: 1px solid #ddd; padding-top:20px;">
+                    <p style="color:#666; margin-bottom:12px; font-size:0.9em;">¿No tienes cuenta?</p>
+                    <a href="/formulario" style="background: linear-gradient(135deg,#4dd0e1,#00acc1); color:#fff; padding:12px 24px; font-size:0.95em; border-radius:25px; display:inline-block; text-decoration:none; font-weight:bold; cursor:pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(77, 208, 225, 0.3);">
+                        📝 Formulario de Aspirante
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Bloqueado - AWUIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .blocked-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .blocked-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px;
+            font-size: 50px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .message {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .warning-box p {
+            color: #856404;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .countdown-box {
+            background: #f8f9fa;
+            border: 2px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .countdown-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .countdown-timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff6b6b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .countdown-text {
+            color: #999;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .info-text {
+            color: #999;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .blocked-container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .countdown-timer {
+                font-size: 36px;
+            }
+
+            .blocked-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="blocked-container">
+        <div class="blocked-icon">🚫</div>
+        <h1>¡Acceso Bloqueado!</h1>
+        <p class="message" th:text="${message}"></p>
+
+        <div class="warning-box">
+            <p>⚠️ <strong>Razón:</strong> Has excedido el número máximo de intentos permitidos al enviar el formulario.</p>
+        </div>
+
+        <div class="countdown-box">
+            <p class="countdown-label">Serás redirigido al menú principal en:</p>
+            <div class="countdown-timer" id="timer">5</div>
+            <p class="countdown-text">segundos...</p>
+        </div>
+
+        <p class="info-text">Por favor, espera o presiona el botón de atrás en tu navegador si deseas ir al menú.</p>
+    </div>
+
+    <script>
+        let countdown = 5;
+        const timerElement = document.getElementById('timer');
+
+        const interval = setInterval(() => {
+            countdown--;
+            timerElement.textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                window.location.href = '/';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
+
