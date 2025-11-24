@@ -43,4 +43,9 @@ public class FormularioMapper {
             em.merge(f);
         }
     }
+
+    public Formulario actualizarFormulario(Formulario formulario) {
+        if (formulario == null) return null;
+        return em.merge(formulario);
+    }
 }

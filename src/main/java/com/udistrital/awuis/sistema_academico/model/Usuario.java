@@ -2,6 +2,8 @@ package com.udistrital.awuis.sistema_academico.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -16,6 +18,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "Usuario")
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Usuario {
 
     private String contrasena;
@@ -74,4 +77,3 @@ public class Usuario {
         this.token = token;
     }
 }
-

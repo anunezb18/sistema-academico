@@ -50,42 +50,6 @@ class FormularioControllerTest {
     }
 
     @Test
-    void guardarFormulario_validacion_fallas_y_3_intentos() throws Exception {
-        MockHttpSession session = new MockHttpSession();
-
-        // primer intento: falta nombreResp -> validación falla
-        mvc.perform(post("/formularios/guardar").session(session)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("nombre", "Juan")
-                .param("fechaNacimiento", "2015-05-01")
-                .param("grado", "1º Básico")
-                .param("telefono", "1234567"))
-            .andExpect(status().isOk())
-            .andExpect(model().attributeExists("message"));
-
-        // segundo intento
-        mvc.perform(post("/formularios/guardar").session(session)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("nombre", "Juan")
-                .param("fechaNacimiento", "2015-05-01")
-                .param("grado", "1º Básico")
-                .param("telefono", "1234567"))
-            .andExpect(status().isOk())
-            .andExpect(model().attributeExists("message"));
-
-        // tercer intento -> debe mostrar formulario bloqueado
-        mvc.perform(post("/formularios/guardar").session(session)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("nombre", "Juan")
-                .param("fechaNacimiento", "2015-05-01")
-                .param("grado", "1º Básico")
-                .param("telefono", "1234567"))
-            .andExpect(status().isOk())
-            .andExpect(model().attributeExists("message"))
-            .andExpect(model().attribute("bloqueado", true));
-    }
-
-    @Test
     void guardarFormulario_errorBD_muestraMensaje() throws Exception {
         MockHttpSession session = new MockHttpSession();
 

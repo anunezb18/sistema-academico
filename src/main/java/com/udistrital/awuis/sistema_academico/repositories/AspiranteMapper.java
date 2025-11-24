@@ -44,5 +44,17 @@ public class AspiranteMapper {
             em.merge(a);
         }
     }
+
+    public Aspirante obtenerAspirantePorId(int id) {
+        return em.find(Aspirante.class, id);
+    }
+
+    public void actualizarEstadoFormulario(int idFormulario, String estado) {
+        Formulario formulario = em.find(Formulario.class, idFormulario);
+        if (formulario != null) {
+            formulario.setEstado(estado);
+            em.merge(formulario);
+        }
+    }
 }
 

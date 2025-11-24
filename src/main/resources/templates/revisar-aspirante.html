@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisar Aspirante - AWUIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            color: #37474f;
+            font-size: 28px;
+        }
+
+        .back-btn {
+            padding: 12px 25px;
+            background: #fff;
+            color: #26c6da;
+            border: 2px solid #26c6da;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: #e0f7fa;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+        }
+
+        .info-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .info-section h2 {
+            color: #37474f;
+            font-size: 22px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0f7fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, #e1f5fe 0%, #f1f8fb 100%);
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
+        }
+
+        .profile-info h3 {
+            color: #006064;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .profile-info p {
+            color: #546e7a;
+            font-size: 15px;
+            margin: 4px 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 4px solid #26c6da;
+        }
+
+        .info-item label {
+            display: block;
+            color: #78909c;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item .value {
+            color: #37474f;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border: none;
+            border-top: 2px solid #e0f7fa;
+        }
+
+        .section-subtitle {
+            color: #00838f;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .actions-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+            position: sticky;
+            top: 30px;
+        }
+
+        .actions-panel h2 {
+            color: #37474f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0f7fa;
+        }
+
+        .status-info {
+            padding: 15px;
+            background: #fff9c4;
+            border-left: 4px solid #f57f17;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .status-info p {
+            color: #f57f17;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .accept-btn {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(102, 187, 106, 0.3);
+        }
+
+        .accept-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        .reject-btn {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(239, 83, 80, 0.3);
+        }
+
+        .reject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(239, 83, 80, 0.4);
+        }
+
+        .divider {
+            margin: 20px 0;
+            text-align: center;
+            color: #90a4ae;
+            font-size: 14px;
+        }
+
+        .documents-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .documents-section h4 {
+            color: #546e7a;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #37474f;
+        }
+
+        @media (max-width: 968px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-panel {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <span style="font-size: 32px;">📋</span>
+                <h1>Revisión de Aspirante</h1>
+            </div>
+            <a href="/directivo/aspirantes" class="back-btn">
+                ← Volver a Aspirantes
+            </a>
+        </div>
+
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Information Section -->
+            <div class="info-section">
+                <h2>📝 Información Personal</h2>
+
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-photo" th:text="${aspirante.formulario.nombreCompleto != null and #strings.length(aspirante.formulario.nombreCompleto) >= 2 ? #strings.substring(aspirante.formulario.nombreCompleto, 0, 2).toUpperCase() : 'AS'}">AS</div>
+                    <div class="profile-info">
+                        <h3 th:text="${aspirante.formulario.nombreCompleto}">Nombre del Aspirante</h3>
+                        <p><strong>Grado que Aspira:</strong> <span th:text="${aspirante.formulario.gradoAspira}">-</span></p>
+                        <p><strong>Fecha de Nacimiento:</strong> <span th:text="${#temporals.format(aspirante.formulario.fechaNacimiento, 'dd/MM/yyyy')}">15/03/2012</span></p>
+                    </div>
+                </div>
+
+                <!-- Personal Information Grid -->
+                <div class="section-subtitle">👤 Datos Personales</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Nombre Completo</label>
+                        <div class="value" th:text="${aspirante.formulario.nombreCompleto}">María Fernández</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Edad</label>
+                        <div class="value" th:text="${aspirante.formulario.edad != null ? aspirante.formulario.edad + ' años' : 'No especificado'}">7 años</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha de Nacimiento</label>
+                        <div class="value" th:text="${aspirante.formulario.fechaNacimiento != null ? #temporals.format(aspirante.formulario.fechaNacimiento, 'dd/MM/yyyy') : 'No especificado'}">15/03/2012</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Grado que Aspira</label>
+                        <div class="value" th:text="${aspirante.formulario.gradoAspira}">7A</div>
+                    </div>
+                    <div class="info-item full-width">
+                        <label>Dirección</label>
+                        <div class="value" th:text="${aspirante.formulario.direccion != null ? aspirante.formulario.direccion : 'No especificado'}">Calle 123 #45-67</div>
+                    </div>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- Medical Information -->
+                <div class="section-subtitle">🏥 Información Médica</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Tipo de Sangre</label>
+                        <div class="value" th:text="${aspirante.formulario.tipoSangre != null ? aspirante.formulario.tipoSangre : 'No especificado'}">O+</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Alergias</label>
+                        <div class="value" th:text="${aspirante.formulario.alergias != null and !#strings.isEmpty(aspirante.formulario.alergias) ? aspirante.formulario.alergias : 'Ninguna'}">Ninguna</div>
+                    </div>
+                    <div class="info-item full-width">
+                        <label>Condiciones Médicas</label>
+                        <div class="value" th:text="${aspirante.formulario.condicionesMedicas != null and !#strings.isEmpty(aspirante.formulario.condicionesMedicas) ? aspirante.formulario.condicionesMedicas : 'Ninguna'}">Ninguna</div>
+                    </div>
+                    <div class="info-item full-width">
+                        <label>Medicamentos</label>
+                        <div class="value" th:text="${aspirante.formulario.medicamentos != null and !#strings.isEmpty(aspirante.formulario.medicamentos) ? aspirante.formulario.medicamentos : 'Ninguno'}">Ninguno</div>
+                    </div>
+                    <div class="info-item full-width">
+                        <label>Observaciones</label>
+                        <div class="value" th:text="${aspirante.formulario.observaciones != null and !#strings.isEmpty(aspirante.formulario.observaciones) ? aspirante.formulario.observaciones : 'Sin observaciones'}">Sin observaciones</div>
+                    </div>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- Responsible Information -->
+                <div class="section-subtitle">👨‍👩‍👧 Información del Responsable</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Nombre del Responsable</label>
+                        <div class="value" th:text="${aspirante.formulario.nombreResponsable}">Juan Pérez</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Parentesco</label>
+                        <div class="value" th:text="${aspirante.formulario.parentescoResponsable}">Padre</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Teléfono</label>
+                        <div class="value" th:text="${aspirante.formulario.telefonoResponsable}">+57 310 555 1234</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Correo Electrónico</label>
+                        <div class="value" th:text="${aspirante.formulario.correoResponsable}">maria@mail.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Panel -->
+            <div class="actions-panel">
+                <h2>⚡ Acciones</h2>
+
+                <div class="status-info">
+                    <p>
+                        <span th:if="${aspirante.formulario.estado == 'ACEPTADO'}">✅ Estado: Aceptado</span>
+                        <span th:if="${aspirante.formulario.estado == 'RECHAZADO'}">❌ Estado: Rechazado</span>
+                        <span th:if="${aspirante.formulario.estado != 'ACEPTADO' and aspirante.formulario.estado != 'RECHAZADO'}">⏳ Estado: Pendiente de Revisión</span>
+                    </p>
+                </div>
+
+                <!-- Debug: Mostrar el estado actual -->
+                <div style="padding: 10px; background: #f0f0f0; border-radius: 5px; margin: 10px 0; font-size: 12px; color: #666;">
+                    🔍 Estado actual en BD: "<span th:text="${aspirante.formulario.estado}">-</span>"
+                </div>
+
+                <!-- Mostrar botones solo si NO ha sido ACEPTADO o RECHAZADO -->
+                <div th:if="${aspirante.formulario.estado != 'ACEPTADO' and aspirante.formulario.estado != 'RECHAZADO'}">
+                    <form th:action="@{/directivo/aspirantes/{id}/aceptar(id=${aspirante.idAspirante})}" method="post">
+                        <button type="submit" class="action-btn accept-btn">
+                            <span>✓</span>
+                            <span>Aceptar Aspirante</span>
+                        </button>
+                    </form>
+
+                    <form id="formRechazo" th:action="@{/directivo/aspirantes/{id}/rechazar(id=${aspirante.idAspirante})}" method="post">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; color: #37474f; font-weight: 600;">
+                                Razón del Rechazo: <span style="color: red;">*</span>
+                            </label>
+                            <textarea
+                                name="razonRechazo"
+                                id="razonRechazo"
+                                rows="4"
+                                placeholder="Ingrese el motivo del rechazo (requerido)..."
+                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"
+                                required></textarea>
+                        </div>
+                        <button type="submit" class="action-btn reject-btn">
+                            <span>✗</span>
+                            <span>Rechazar Aspirante</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Mensaje si ya fue procesado -->
+                <div th:if="${aspirante.formulario.estado == 'ACEPTADO'}" style="padding: 15px; background: #c8e6c9; border-radius: 10px; color: #2e7d32; margin: 15px 0;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        ✅ Este aspirante ya ha sido aceptado
+                    </div>
+                    <p style="margin: 5px 0;">No se pueden realizar más acciones sobre este aspirante.</p>
+                    <button onclick="window.location.href='/directivo/aspirantes'"
+                            style="margin-top: 15px; padding: 12px 24px; background: white; color: #2e7d32; border: 2px solid #2e7d32; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ← Volver a Lista de Aspirantes
+                    </button>
+                </div>
+
+                <div th:if="${aspirante.formulario.estado == 'RECHAZADO'}" style="padding: 15px; background: #ffcdd2; border-radius: 10px; color: #c62828; margin: 15px 0;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        ❌ Este aspirante ya ha sido rechazado
+                    </div>
+                    <div th:if="${aspirante.formulario.observaciones}" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.3); border-radius: 5px;">
+                        <strong>Razón del rechazo:</strong><br/>
+                        <span th:text="${aspirante.formulario.observaciones}" style="font-style: italic;"></span>
+                    </div>
+                    <p style="margin: 5px 0;">No se pueden realizar más acciones sobre este aspirante.</p>
+                    <button onclick="window.location.href='/directivo/aspirantes'"
+                            style="margin-top: 15px; padding: 12px 24px; background: white; color: #c62828; border: 2px solid #c62828; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ← Volver a Lista de Aspirantes
+                    </button>
+                </div>
+
+                <div class="divider">───</div>
+
+                <div class="documents-section">
+                    <h4>📎 Documentos Adjuntos</h4>
+                    <div class="document-item">
+                        📄 Acta de Nacimiento.pdf
+                    </div>
+                    <div class="document-item">
+                        📄 Boletín Grado 6.pdf
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Confirmación antes de aceptar/rechazar
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const isAccept = this.action.includes('/aceptar');
+
+                if (isAccept) {
+                    const mensaje = '¿Está seguro de que desea ACEPTAR a este aspirante?';
+                    if (!confirm(mensaje)) {
+                        e.preventDefault();
+                    }
+                } else if (this.action.includes('/rechazar')) {
+                    const razonRechazo = document.getElementById('razonRechazo');
+                    if (razonRechazo && razonRechazo.value.trim() === '') {
+                        alert('Debe ingresar una razón para el rechazo');
+                        e.preventDefault();
+                        return;
+                    }
+
+                    const mensaje = '¿Está seguro de que desea RECHAZAR a este aspirante?\n\nEsta acción enviará un correo al responsable con la razón proporcionada.';
+                    if (!confirm(mensaje)) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
