@@ -1,5 +1,6 @@
 package com.udistrital.awuis.sistema_academico.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,15 +10,16 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "Aspirante")
+@Table(name = "\"Aspirante\"")
 public class Aspirante {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idAspirante\"")
     private int idAspirante;
 
     @OneToOne
-    @JoinColumn(name = "idFormulario")
+    @JoinColumn(name = "\"idFormulario\"")
     private Formulario formulario;
 
     public Aspirante() {

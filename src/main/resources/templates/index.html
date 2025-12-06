@@ -226,13 +226,18 @@
             <h2>Inicia sesión</h2>
             <p class="welcome-text">¡Bienvenidos a Awuis!</p>
 
-            <form action="#" method="post">
+            <!-- Mostrar mensaje de error si existe -->
+            <div th:if="${error}" style="background: #ffebee; color: #c62828; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+                <span th:text="${error}"></span>
+            </div>
+
+            <form action="/login" method="post">
                 <div class="input-group">
                     <div class="input-wrapper">
                         <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
                         </svg>
-                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                        <input type="email" name="correo" placeholder="Correo electrónico" required>
                     </div>
                 </div>
 
@@ -241,7 +246,7 @@
                         <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
-                        <input type="password" name="password" placeholder="Contraseña" required>
+                        <input type="password" name="contrasena" placeholder="Contraseña" required>
                     </div>
                 </div>
 

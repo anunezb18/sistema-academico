@@ -1,47 +1,14 @@
 package com.udistrital.awuis.sistema_academico.repositories;
 
-import java.util.List;
-
+import com.udistrital.awuis.sistema_academico.model.Rol;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.udistrital.awuis.sistema_academico.model.Permiso;
-import com.udistrital.awuis.sistema_academico.model.Rol;
+import java.util.Optional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Transactional;
-
-/**
- * DataType RolMapper
- * - insertarRol(Rol): void
- * - obtenerPermisosPorRol(int): List<Permiso>
- * - obtenerPorId(int): void
- */
 @Repository
-@Transactional
-public class RolMapper {
+public interface RolMapper extends JpaRepository<Rol, Integer> {
 
-    @PersistenceContext
-    private EntityManager em;
-
-    public RolMapper() {
-    }
-
-    public void insertarRol(Rol rol) {
-        if (rol != null) {
-            em.persist(rol);
-        }
-    }
-
-    public List<Permiso> obtenerPermisosPorRol(int idRol) {
-        TypedQuery<Permiso> q = em.createQuery(
-                "SELECT p FROM Rol r JOIN r.permisos p WHERE r.idRol = :idRol", Permiso.class);
-        q.setParameter("idRol", idRol);
-        return q.getResultList();
-    }
-
-    public Rol obtenerPorId(int idRol) {
-        return em.find(Rol.class, idRol);
-    }
+    Optional<Rol> findByNombre(String nombre);
 }
+

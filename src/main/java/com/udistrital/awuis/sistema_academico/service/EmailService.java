@@ -22,6 +22,38 @@ public class EmailService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     /**
+     * Método genérico para enviar correos electrónicos
+     *
+     * @param destinatario Correo electrónico del destinatario
+     * @param asunto Asunto del correo
+     * @param cuerpo Cuerpo del mensaje
+     * @return true si se envió exitosamente, false si hubo error
+     */
+    public boolean enviarCorreo(String destinatario, String asunto, String cuerpo) {
+        try {
+            SimpleMailMessage mensaje = new SimpleMailMessage();
+            mensaje.setFrom(fromEmail);
+            mensaje.setTo(destinatario);
+            mensaje.setSubject(asunto);
+            mensaje.setText(cuerpo);
+
+            mailSender.send(mensaje);
+
+            System.out.println("✓ Correo enviado exitosamente a: " + destinatario);
+            return true;
+
+        } catch (MailException e) {
+            System.err.println("✗ Error al enviar correo a " + destinatario + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            System.err.println("✗ Error inesperado al enviar correo: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Envia notificacion de entrevista programada al correo del responsable del aspirante
      *
      * @param nombreAspirante Nombre completo del aspirante

@@ -1,6 +1,9 @@
 package com.udistrital.awuis.sistema_academico.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -10,28 +13,30 @@ import jakarta.persistence.Table;
 
 /**
  * Entidad Usuario:
- * - contraseña: String
- * - correo: String
- * - idUsuario: int
- * - nombre: String
- * - token: TokenUsuario
+ * - contrasena: String → mapea a columna "contraseña" (con comillas y tilde en DB)
+ * - correo: String (columna sin comillas en DB)
+ * - idUsuario: int → mapea a columna "idUsuario" (con comillas en DB)
+ * - token: TokenUsuario → FK "idToken" (con comillas en DB)
+ *
+ * Estrategia JOINED: Usuario y Directivo tienen tablas separadas unidas por JOIN
  */
 @Entity
-@Table(name = "Usuario")
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(name = "\"Usuario\"")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Usuario {
 
+    @Column(name = "\"contraseña\"")
     private String contrasena;
 
     private String correo;
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idUsuario\"")
     private int idUsuario;
 
-    private String nombre;
-
     @OneToOne
-    @JoinColumn(name = "idToken")
+    @JoinColumn(name = "\"idToken\"")
     private TokenUsuario token;
 
     public Usuario() {
@@ -61,13 +66,6 @@ public class Usuario {
         this.idUsuario = idUsuario;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
 
     public TokenUsuario getToken() {
         return token;

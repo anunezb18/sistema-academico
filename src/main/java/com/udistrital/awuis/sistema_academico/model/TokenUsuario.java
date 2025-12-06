@@ -8,17 +8,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
  * Entidad TokenUsuario
  */
 @Entity
-@Table(name = "TokenUsuario")
+@Table(name = "\"TokenUsuario\"")
 public class TokenUsuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idToken\"")
     private int idToken;
 
     private String contenido;
@@ -26,6 +29,10 @@ public class TokenUsuario {
     private boolean estado;
 
     private LocalDateTime expiracion;
+
+    @ManyToOne
+    @JoinColumn(name = "\"idRol\"", nullable = false)
+    private Rol rol;
 
     public TokenUsuario() {
     }
@@ -60,6 +67,14 @@ public class TokenUsuario {
 
     public void setExpiracion(LocalDateTime expiracion) {
         this.expiracion = expiracion;
+    }
+
+    public Rol getRol() {
+        return rol;
+    }
+
+    public void setRol(Rol rol) {
+        this.rol = rol;
     }
 
     public boolean esValido() {

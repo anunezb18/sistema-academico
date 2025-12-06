@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Estudiante - AWUIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            text-align: center;
+        }
+
+        .logo-section h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-section p {
+            color: #e0f7fa;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            color: #546e7a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            margin: 5px 0;
+        }
+
+        .menu-item:hover {
+            background: #e0f7fa;
+            border-left-color: #26c6da;
+            color: #00838f;
+        }
+
+        .menu-item.active {
+            background: #b2ebf2;
+            border-left-color: #00acc1;
+            color: #006064;
+            font-weight: 600;
+        }
+
+        .menu-item-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .logout-section {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 15px;
+            background: #ef5350;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e53935;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text h2 {
+            color: #00838f;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .welcome-text p {
+            color: #78909c;
+            font-size: 14px;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #26c6da;
+            font-size: 18px;
+        }
+
+        /* Content Cards */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #00838f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Calendar */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: #e0f7fa;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #00838f;
+            font-weight: 600;
+        }
+
+        .calendar-nav:hover {
+            background: #b2ebf2;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px 5px;
+            font-weight: 600;
+            color: #546e7a;
+            font-size: 13px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 12px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f5f5f5;
+        }
+
+        .calendar-day:hover {
+            background: #e0f7fa;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Announcements */
+        .announcement-item {
+            padding: 15px;
+            background: #fffde7;
+            border-left: 4px solid #ffd54f;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .announcement-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .announcement-date {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .announcement-title {
+            font-weight: 600;
+            color: #37474f;
+            margin-bottom: 3px;
+        }
+
+        .announcement-desc {
+            font-size: 13px;
+            color: #78909c;
+        }
+
+        /* Historial Académico */
+        .historial-item {
+            padding: 15px;
+            background: #e1f5fe;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .historial-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(77, 208, 225, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-section">
+            <h1>AWUIS</h1>
+            <p>ARTE Y APRENDIZAJE</p>
+        </div>
+
+        <div class="menu">
+            <a href="#" class="menu-item active">
+                <span class="menu-item-icon">🏠</span>
+                <span>Principal</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-item-icon">👁️</span>
+                <span>Observador</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-item-icon">📊</span>
+                <span>Historial Académico</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-item-icon">📋</span>
+                <span>Hoja de Vida</span>
+            </a>
+        </div>
+
+        <div class="logout-section">
+            <button class="logout-btn" onclick="location.href='/logout'">⬅️ Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="welcome-text">
+                <h2>¡Bienvenido, <span th:text="${nombreEstudiante}">Estudiante</span>!</h2>
+                <p th:text="${correoEstudiante}">correo@ejemplo.com</p>
+            </div>
+            <div class="user-badge">
+                <div class="user-avatar">👤</div>
+                <span th:text="${nombreEstudiante}">Estudiante</span>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Calendario y Anuncios -->
+            <div>
+                <!-- Calendario Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>📅</span>
+                            <span>Calendario</span>
+                        </div>
+                    </div>
+                    <div class="calendar-header">
+                        <button class="calendar-nav">◀</button>
+                        <h3 style="color: #00838f;">Diciembre 2024</h3>
+                        <button class="calendar-nav">▶</button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">Lun</div>
+                        <div class="calendar-day-header">Mar</div>
+                        <div class="calendar-day-header">Mié</div>
+                        <div class="calendar-day-header">Jue</div>
+                        <div class="calendar-day-header">Vie</div>
+                        <div class="calendar-day-header">Sáb</div>
+                        <div class="calendar-day-header">Dom</div>
+
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day">2</div>
+                        <div class="calendar-day">3</div>
+                        <div class="calendar-day">4</div>
+                        <div class="calendar-day today">5</div>
+                        <div class="calendar-day">6</div>
+                        <div class="calendar-day">7</div>
+                        <div class="calendar-day">8</div>
+                        <div class="calendar-day">9</div>
+                        <div class="calendar-day">10</div>
+                        <div class="calendar-day">11</div>
+                        <div class="calendar-day">12</div>
+                        <div class="calendar-day">13</div>
+                        <div class="calendar-day">14</div>
+                        <div class="calendar-day">15</div>
+                        <div class="calendar-day">16</div>
+                        <div class="calendar-day">17</div>
+                        <div class="calendar-day">18</div>
+                        <div class="calendar-day">19</div>
+                        <div class="calendar-day">20</div>
+                        <div class="calendar-day">21</div>
+                        <div class="calendar-day">22</div>
+                        <div class="calendar-day">23</div>
+                        <div class="calendar-day">24</div>
+                        <div class="calendar-day">25</div>
+                        <div class="calendar-day">26</div>
+                        <div class="calendar-day">27</div>
+                        <div class="calendar-day">28</div>
+                        <div class="calendar-day">29</div>
+                        <div class="calendar-day">30</div>
+                        <div class="calendar-day">31</div>
+                    </div>
+                </div>
+
+                <!-- Anuncios Card -->
+                <div class="card" style="margin-top: 25px;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>📢</span>
+                            <span>Anuncios Importantes</span>
+                        </div>
+                    </div>
+                    <div class="announcement-item">
+                        <div class="announcement-date">20 oct - Reunión de padres</div>
+                        <div class="announcement-title">Recordatorio: la reunión será a las 8:00 a.m.</div>
+                        <div class="announcement-desc">En el salón principal del colegio</div>
+                    </div>
+                    <div class="announcement-item">
+                        <div class="announcement-date">23 oct - Día del color</div>
+                        <div class="announcement-title">Los niños deben venir vestidos</div>
+                        <div class="announcement-desc">con ropa de color azul</div>
+                    </div>
+                    <div class="announcement-item">
+                        <div class="announcement-date">🎒 oct - Entrega de boletines</div>
+                        <div class="announcement-title">Disponible en la plataforma</div>
+                        <div class="announcement-desc">Consultar calificaciones</div>
+                    </div>
+                    <button class="btn-primary" style="margin-top: 15px; width: 100%;">Ver todos los avisos</button>
+                </div>
+            </div>
+
+            <!-- Historial Académico -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>📚</span>
+                            <span>Historial Académico</span>
+                        </div>
+                    </div>
+                    <div class="historial-item">
+                        <div class="historial-icon">📖</div>
+                        <div>
+                            <div style="font-weight: 600; color: #00838f;">SEAP 4P 2023</div>
+                            <div style="font-size: 13px; color: #78909c;">Sistema de Evaluación</div>
+                        </div>
+                    </div>
+                    <div class="historial-item">
+                        <div class="historial-icon">📝</div>
+                        <div>
+                            <div style="font-weight: 600; color: #00838f;">Reunión de Padres</div>
+                            <div style="font-size: 13px; color: #78909c;">Último trimestre</div>
+                        </div>
+                    </div>
+                    <div class="historial-item">
+                        <div class="historial-icon">🎨</div>
+                        <div>
+                            <div style="font-weight: 600; color: #00838f;">Arte y Creatividad</div>
+                            <div style="font-size: 13px; color: #78909c;">Proyecto final</div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px; width: 100%;">Ver Historial Completo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

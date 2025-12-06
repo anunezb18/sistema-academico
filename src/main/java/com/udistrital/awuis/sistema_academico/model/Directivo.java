@@ -5,12 +5,12 @@ import jakarta.persistence.Table;
 
 /**
  * Entidad Directivo que hereda de Usuario:
- * - Hereda: nombre, correo, contraseña, token, idUsuario
- * - Mapea a tabla Directivo (estrategia TABLE_PER_CLASS)
- * - No crea columna tipo_usuario
+ * - Hereda: correo, contraseña, token, idUsuario
+ * - Mapea a tabla Directivo (estrategia JOINED)
+ * - Se une a Usuario mediante JOIN en lugar de UNION
  */
 @Entity
-@Table(name = "Directivo")
+@Table(name = "\"Directivo\"")
 public class Directivo extends Usuario {
 
     public Directivo() {
@@ -29,7 +29,6 @@ public class Directivo extends Usuario {
     public String toString() {
         return "Directivo{" +
                 "idDirectivo=" + getIdUsuario() +
-                ", nombre='" + getNombre() + '\'' +
                 ", correo='" + getCorreo() + '\'' +
                 '}';
     }

@@ -1,6 +1,7 @@
 package com.udistrital.awuis.sistema_academico.model;
 
 import java.io.Serializable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,15 +12,17 @@ import jakarta.persistence.Table;
  * Entidad Permiso
  */
 @Entity
-@Table(name = "Permiso")
+@Table(name = "\"Permiso\"")
 public class Permiso implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idPermiso\"")
     private int idPermiso;
 
+    @Column(name = "\"descripcion\"")
     private String descripcion;
 
     public Permiso() {

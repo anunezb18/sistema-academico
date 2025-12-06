@@ -24,7 +24,6 @@ class UsuarioMapperTest {
     @Test
     void agregarEInhabilitarUsuario_funcionaCorrectamente() {
         Usuario u = new Usuario();
-        u.setNombre("TestUser");
         u.setCorreo("test@example.com");
         u.setContrasena("pwd");
 

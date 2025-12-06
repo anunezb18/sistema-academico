@@ -14,17 +14,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.udistrital.awuis.sistema_academico.model.Aspirante;
 import com.udistrital.awuis.sistema_academico.model.Entrevista;
 import com.udistrital.awuis.sistema_academico.model.Estudiante;
 import com.udistrital.awuis.sistema_academico.model.Formulario;
+import com.udistrital.awuis.sistema_academico.model.HistorialAcademico;
+import com.udistrital.awuis.sistema_academico.model.Observador;
+import com.udistrital.awuis.sistema_academico.model.Usuario;
 import com.udistrital.awuis.sistema_academico.repositories.AspiranteMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EntrevistaMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EstudianteMapper;
 import com.udistrital.awuis.sistema_academico.repositories.FormularioMapper;
+import com.udistrital.awuis.sistema_academico.repositories.HistorialAcademicoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.ObservadorMapper;
 import com.udistrital.awuis.sistema_academico.service.EmailService;
+import com.udistrital.awuis.sistema_academico.service.UsuarioService;
 
 @Controller
 public class DirectivoController {
@@ -42,19 +49,36 @@ public class DirectivoController {
     private FormularioMapper formularioMapper;
 
     @Autowired
+    private HistorialAcademicoMapper historialAcademicoMapper;
+
+    @Autowired
+    private ObservadorMapper observadorMapper;
+
+    @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     private static final int MARGEN_MINUTOS_ENTREVISTA = 60;
 
     @GetMapping("/directivo")
-    public String directivo() {
+    public String directivo(@SessionAttribute(value = "usuario", required = false) Usuario usuario, Model model) {
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("correoDirectivo", usuario.getCorreo());
         return "directivo";
     }
 
     @GetMapping("/directivo/aspirantes")
-    public String aspirantes(Model model) {
+    public String aspirantes(@SessionAttribute(value = "usuario", required = false) Usuario usuario, Model model) {
+        if (usuario == null) {
+            return "redirect:/login";
+        }
         List<Aspirante> aspirantes = aspiranteMapper.listarAspirantes();
         model.addAttribute("aspirantes", aspirantes);
+        model.addAttribute("correoDirectivo", usuario.getCorreo());
         return "aspirantes";
     }
 
@@ -107,12 +131,34 @@ public class DirectivoController {
             }
 
             // PASO 2: Crear registro del aspirante en la tabla Estudiante
+
+            // 1. Crear Observador vacío primero
+            Observador observador = new Observador();
+            observador = observadorMapper.save(observador);
+
+            // 2. Crear HistorialAcademico con el ID del observador
+            HistorialAcademico historial = new HistorialAcademico();
+            historial.setIdObservador(observador.getIdObservador());
+            historial = historialAcademicoMapper.save(historial);
+
+            // 3. Crear Estudiante con todos los datos requeridos
             Estudiante estudiante = new Estudiante();
             estudiante.setIdFormulario(formulario.getIdFormulario());
             estudiante.setFechaIngreso(LocalDate.now());
-            // idUsuario, idHistorialAcademico, idGrupo se asignan posteriormente
+            estudiante.setIdHistorialAcademico(historial.getIdHistorialAcademico());
+
+            // NUEVO: Crear usuario con credenciales para el estudiante
+            com.udistrital.awuis.sistema_academico.model.Usuario usuarioEstudiante =
+                usuarioService.crearEstudianteDesdeAspirante(
+                    formulario.getCorreoResponsable(),
+                    formulario.getNombreCompleto()
+                );
+
+            // Asignar el ID de usuario al estudiante
+            estudiante.setIdUsuario(usuarioEstudiante.getIdUsuario());
 
             estudianteMapper.agregarEstudiante(estudiante);
+
 
             // PASO 4: Asignar fecha y hora de la entrevista
             LocalDateTime fechaHora;

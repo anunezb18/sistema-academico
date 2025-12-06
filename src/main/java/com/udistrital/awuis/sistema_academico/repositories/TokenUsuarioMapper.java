@@ -1,51 +1,21 @@
 package com.udistrital.awuis.sistema_academico.repositories;
 
+import com.udistrital.awuis.sistema_academico.model.TokenUsuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.udistrital.awuis.sistema_academico.model.TokenUsuario;
+import java.util.Optional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
-
-/**
- * TokenUsuarioMapper
- * - desactivarToken(int): void
- * - guardarToken(TokenUsuario): void
- * - obtenerToken(String): TokenUsuario
- */
 @Repository
-@Transactional
-public class TokenUsuarioMapper {
+public interface TokenUsuarioMapper extends JpaRepository<TokenUsuario, Integer> {
 
-    @PersistenceContext
-    private EntityManager em;
+    Optional<TokenUsuario> findByContenidoAndEstadoTrue(String contenido);
 
-    public TokenUsuarioMapper() {
-    }
-
-    public void desactivarToken(int idToken) {
-        TokenUsuario t = em.find(TokenUsuario.class, idToken);
-        if (t != null) {
-            t.quitarToken();
-            em.merge(t);
-        }
-    }
-
-    public void guardarToken(TokenUsuario token) {
-        if (token != null) {
-            if (token.getIdToken() == 0) {
-                em.persist(token);
-            } else {
-                em.merge(token);
-            }
-        }
-    }
-
-    public TokenUsuario obtenerToken(String contenido) {
-        var q = em.createQuery("SELECT t FROM TokenUsuario t WHERE t.contenido = :c", TokenUsuario.class);
-        q.setParameter("c", contenido);
-        return q.getResultStream().findFirst().orElse(null);
-    }
+    @Modifying
+    @Query("UPDATE TokenUsuario t SET t.estado = false WHERE t.idToken = :idToken")
+    void invalidar(@Param("idToken") int idToken);
 }
 

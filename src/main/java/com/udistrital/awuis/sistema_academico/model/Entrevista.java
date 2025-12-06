@@ -4,23 +4,24 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Entrevista")
+@Table(name = "\"Entrevista\"")
 public class Entrevista {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idEntrevista\"")
     private int idEntrevista;
 
-    @Column(name = "idAspirante", nullable = false)
+    @Column(name = "\"idAspirante\"", nullable = false)
     private Integer idAspirante;
 
-    @Column(name = "fechaHora", nullable = false)
+    @Column(name = "\"fechaHora\"", nullable = false)
     private LocalDateTime fechaHora;
 
-    @Column(name = "estado")
+    @Column(name = "\"estado\"")
     private String estado; // PROGRAMADA, COMPLETADA, CANCELADA
 
-    @Column(name = "observaciones")
+    @Column(name = "\"observaciones\"")
     private String observaciones;
 
     public Entrevista() {

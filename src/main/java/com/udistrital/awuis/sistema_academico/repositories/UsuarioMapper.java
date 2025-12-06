@@ -1,41 +1,21 @@
 package com.udistrital.awuis.sistema_academico.repositories;
 
+import com.udistrital.awuis.sistema_academico.model.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.udistrital.awuis.sistema_academico.model.Usuario;
+import java.util.Optional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
-
-/**
- * UsuarioMapper:
- * - agregarUsuario(int, Usuario): void
- * - inhabilitarUsuario(int): void
- */
 @Repository
-@Transactional
-public class UsuarioMapper {
+public interface UsuarioMapper extends JpaRepository<Usuario, Integer> {
 
-    @PersistenceContext
-    private EntityManager em;
+    Optional<Usuario> findByCorreo(String correo);
 
-    public UsuarioMapper() {
-    }
-
-    public void agregarUsuario(int id, Usuario usuario) {
-        if (usuario == null) return;
-        usuario.setIdUsuario(id);
-        em.persist(usuario);
-    }
-
-    public void inhabilitarUsuario(int id) {
-        Usuario u = em.find(Usuario.class, id);
-        if (u != null) {
-            if (u.getToken() != null) {
-                u.getToken().quitarToken();
-                em.merge(u);
-            }
-        }
-    }
+    @Modifying
+    @Query("UPDATE Usuario u SET u.token.idToken = :idToken WHERE u.idUsuario = :idUsuario")
+    void actualizarToken(@Param("idUsuario") int idUsuario, @Param("idToken") int idToken);
 }
+

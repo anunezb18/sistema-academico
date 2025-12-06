@@ -4,26 +4,27 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Estudiante")
+@Table(name = "\"Estudiante\"")
 public class Estudiante {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"idEstudiante\"")
     private int idEstudiante;
 
-    @Column(name = "idUsuario")
+    @Column(name = "\"idUsuario\"")
     private Integer idUsuario;
 
-    @Column(name = "idHistorialAcademico")
+    @Column(name = "\"idHistorialAcademico\"")
     private Integer idHistorialAcademico;
 
-    @Column(name = "fechaIngreso")
+    @Column(name = "\"fechaIngreso\"")
     private LocalDate fechaIngreso;
 
-    @Column(name = "idGrupo")
+    @Column(name = "\"idGrupo\"")
     private Integer idGrupo;
 
-    @Column(name = "idFormulario")
+    @Column(name = "\"idFormulario\"")
     private Integer idFormulario;
 
     public Estudiante() {

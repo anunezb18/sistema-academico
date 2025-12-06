@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Directivo - AWUIS</title>
+    <title>Panel Administrador - AWUIS</title>
     <style>
         * {
             margin: 0;
@@ -181,6 +181,7 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
         }
 
         .content-section h3 {
@@ -222,23 +223,58 @@
             font-weight: bold;
         }
 
-        .welcome-message {
+        /* Formulario */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #546e7a;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #26c6da;
+            box-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
             background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
             color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
-        }
-
-        .welcome-message h2 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .welcome-message p {
+            border: none;
+            border-radius: 10px;
             font-size: 16px;
-            opacity: 0.95;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(77, 208, 225, 0.4);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
         }
     </style>
 </head>
@@ -252,28 +288,8 @@
 
         <div class="menu">
             <a href="#" class="menu-item active">
-                <span class="menu-item-icon">🏠</span>
-                <span>Principal</span>
-            </a>
-            <a href="#" class="menu-item">
-                <span class="menu-item-icon">👁️</span>
-                <span>Observador</span>
-            </a>
-            <a href="#" class="menu-item">
-                <span class="menu-item-icon">📚</span>
-                <span>Historial Académico</span>
-            </a>
-            <a href="#" class="menu-item">
-                <span class="menu-item-icon">👥</span>
-                <span>Opciones de Grupo</span>
-            </a>
-            <a href="#" class="menu-item">
-                <span class="menu-item-icon">📄</span>
-                <span>Hoja de Vida</span>
-            </a>
-            <a href="/directivo/aspirantes" class="menu-item">
-                <span class="menu-item-icon">🎓</span>
-                <span>Aspirantes en Proceso</span>
+                <span class="menu-item-icon">🚫</span>
+                <span>Inhabilitar Cuenta</span>
             </a>
         </div>
 
@@ -290,46 +306,78 @@
         <!-- Header -->
         <div class="header">
             <div class="header-title">
-                <h2>Panel de Control</h2>
-                <p>Bienvenido al sistema de gestión académica</p>
+                <h2>Panel de Administración</h2>
+                <p>Gestión y control del sistema académico</p>
             </div>
             <div class="user-profile">
-                <div class="user-avatar">👤</div>
+                <div class="user-avatar">AD</div>
                 <div class="user-info">
-                    <h3 th:text="${correoDirectivo}">directivo@awuis.edu.co</h3>
-                    <p>Directivo Académico</p>
+                    <h3>Administrador 1</h3>
+                    <p>Administrador del Sistema</p>
                 </div>
             </div>
         </div>
 
-        <!-- Welcome Message -->
-        <div class="welcome-message">
-            <h2>¡Bienvenido, <span th:text="${correoDirectivo}">Directivo</span>!</h2>
-            <p>Gestiona y supervisa todas las actividades académicas desde este panel de control</p>
-        </div>
-
-        <!-- Content Section -->
+        <!-- Estadísticas -->
         <div class="content-section">
-            <h3>📊 Estadísticas Generales</h3>
+            <h3>📊 Estadísticas del Sistema</h3>
 
             <div class="stats-grid">
                 <div class="stat-card">
                     <h4>Estudiantes Activos</h4>
-                    <div class="number">342</div>
+                    <div class="number" th:text="${cantidadEstudiantes != null ? cantidadEstudiantes : 120}">120</div>
                 </div>
                 <div class="stat-card">
-                    <h4>Docentes</h4>
-                    <div class="number">28</div>
+                    <h4>Profesores</h4>
+                    <div class="number" th:text="${cantidadProfesores != null ? cantidadProfesores : 15}">15</div>
                 </div>
                 <div class="stat-card">
-                    <h4>Grupos</h4>
-                    <div class="number">15</div>
+                    <h4>Administradores</h4>
+                    <div class="number" th:text="${cantidadAdministradores != null ? cantidadAdministradores : 5}">5</div>
                 </div>
                 <div class="stat-card">
-                    <h4>Aspirantes en Proceso</h4>
-                    <div class="number">23</div>
+                    <h4>Usuarios Totales</h4>
+                    <div class="number" th:text="${cantidadTotal != null ? cantidadTotal : 140}">140</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Formulario Crear Cuenta -->
+        <div class="content-section">
+            <h3>➕ Crear Nueva Cuenta</h3>
+
+            <!-- Mensajes de éxito/error -->
+            <div th:if="${mensaje}" style="padding: 15px; background: #c8e6c9; color: #2e7d32; border-radius: 8px; margin-bottom: 20px;">
+                <strong>✓</strong> <span th:text="${mensaje}"></span>
+            </div>
+            <div th:if="${error}" style="padding: 15px; background: #ffcdd2; color: #c62828; border-radius: 8px; margin-bottom: 20px;">
+                <strong>✗</strong> <span th:text="${error}"></span>
+            </div>
+
+            <form id="crearCuentaForm" th:action="@{/administrador/crear-cuenta}" method="post">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="email" name="correo" class="form-control" placeholder="usuario@ejemplo.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="contrasena" class="form-control" placeholder="••••••••" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rol de Usuario</label>
+                    <select name="idRol" class="form-select" required>
+                        <option value="">Seleccione un rol</option>
+                        <option value="1">Directivo</option>
+                        <option value="2">Profesor</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary">CREAR CUENTA</button>
+            </form>
         </div>
     </div>
 
@@ -337,7 +385,6 @@
         // Activar menu item al hacer click
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function(e) {
-                // Solo prevenir navegación si el href es "#"
                 if (this.getAttribute('href') === '#') {
                     e.preventDefault();
                 }
