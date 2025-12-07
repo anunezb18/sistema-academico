@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Componer Correo - AWUIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            text-align: center;
+        }
+
+        .logo-section h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-section p {
+            color: #e0f7fa;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .logout-section {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 15px;
+            background: #ef5350;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e53935;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #00838f;
+            font-size: 28px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            color: #78909c;
+            font-size: 14px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #00838f;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group .required {
+            color: #e53935;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #26c6da;
+            background: #e0f7fa;
+        }
+
+        .form-control:disabled {
+            background: #f5f5f5;
+            color: #78909c;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 200px;
+            font-family: inherit;
+        }
+
+        .destinatarios-preview {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #546e7a;
+            line-height: 1.6;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            background: #f5f5f5;
+            border: 2px dashed #bdbdbd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .file-input-label:hover {
+            background: #e0f7fa;
+            border-color: #26c6da;
+        }
+
+        .file-input-label .icon {
+            font-size: 24px;
+        }
+
+        .file-input-label .text {
+            flex: 1;
+        }
+
+        .file-input-label .file-name {
+            color: #00838f;
+            font-weight: 600;
+        }
+
+        .file-input-label .file-hint {
+            font-size: 12px;
+            color: #78909c;
+            margin-top: 3px;
+        }
+
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: #e65100;
+        }
+
+        .info-box .icon {
+            font-size: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(77, 208, 225, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #546e7a;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #78909c;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-section">
+            <h1>AWUIS</h1>
+            <p>ARTE Y APRENDIZAJE</p>
+        </div>
+
+        <div class="logout-section">
+            <button class="logout-btn" onclick="history.back()">⬅️ Volver</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>✉️ Componer Correo</h1>
+            <p>Redacta tu mensaje y envíalo a los destinatarios seleccionados</p>
+        </div>
+
+        <div class="container">
+            <form action="/correo/enviar" method="post" enctype="multipart/form-data" id="formCorreo">
+                <div class="info-box">
+                    <span class="icon">ℹ️</span>
+                    <div>
+                        <strong>Importante:</strong> Los campos con asterisco (*) son obligatorios.
+                        El correo se enviará desde el sistema académico AWUIS.
+                    </div>
+                </div>
+
+                <!-- Remitente -->
+                <div class="form-group">
+                    <label>De:</label>
+                    <input type="text" class="form-control" th:value="${correoRemitente}" disabled>
+                </div>
+
+                <!-- Destinatarios (oculto pero enviado) -->
+                <input type="hidden" name="destinatarios" th:value="${#strings.listJoin(destinatarios.![correo], ',')}">
+
+                <!-- Para (preview) -->
+                <div class="form-group">
+                    <label>Para:</label>
+                    <div class="destinatarios-preview">
+                        <span th:each="dest, iterStat : ${destinatarios}">
+                            <span th:text="${dest.correo}">destinatario@ejemplo.com</span>
+                            <span th:if="${!iterStat.last}">, </span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Asunto -->
+                <div class="form-group">
+                    <label>Asunto: <span class="required">*</span></label>
+                    <input type="text"
+                           name="asunto"
+                           class="form-control"
+                           placeholder="Escribe el asunto del correo"
+                           required
+                           maxlength="200"
+                           id="asuntoInput">
+                    <div class="char-counter">
+                        <span id="asuntoCounter">0</span>/200 caracteres
+                    </div>
+                </div>
+
+                <!-- Mensaje -->
+                <div class="form-group">
+                    <label>Mensaje: <span class="required">*</span></label>
+                    <textarea name="mensaje"
+                              class="form-control"
+                              placeholder="Escribe tu mensaje aquí..."
+                              required
+                              maxlength="5000"
+                              id="mensajeInput"></textarea>
+                    <div class="char-counter">
+                        <span id="mensajeCounter">0</span>/5000 caracteres
+                    </div>
+                </div>
+
+                <!-- Adjunto -->
+                <div class="form-group">
+                    <label>Adjuntar archivo: <span style="color: #78909c; font-weight: normal;">(opcional)</span></label>
+                    <div class="file-input-wrapper">
+                        <input type="file"
+                               name="adjunto"
+                               id="adjuntoInput"
+                               accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                               onchange="actualizarNombreArchivo()">
+                        <label for="adjuntoInput" class="file-input-label">
+                            <span class="icon">📎</span>
+                            <div class="text">
+                                <div class="file-name" id="fileName">Haz clic para seleccionar un archivo</div>
+                                <div class="file-hint">Formatos permitidos: PDF, DOC, DOCX, TXT, JPG, PNG (Máx. 10MB)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="buttons">
+                    <button type="button" onclick="history.back()" class="btn btn-secondary">
+                        ← Volver
+                    </button>
+                    <button type="button" onclick="borrarBorrador()" class="btn btn-secondary">
+                        🗑️ Borrar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        📧 Enviar Correo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Contador de caracteres para asunto
+        document.getElementById('asuntoInput').addEventListener('input', function() {
+            document.getElementById('asuntoCounter').textContent = this.value.length;
+        });
+
+        // Contador de caracteres para mensaje
+        document.getElementById('mensajeInput').addEventListener('input', function() {
+            document.getElementById('mensajeCounter').textContent = this.value.length;
+        });
+
+        // Actualizar nombre de archivo
+        function actualizarNombreArchivo() {
+            const input = document.getElementById('adjuntoInput');
+            const fileNameDisplay = document.getElementById('fileName');
+
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('El archivo es demasiado grande. El tamaño máximo es 10MB.');
+                    input.value = '';
+                    fileNameDisplay.textContent = 'Haz clic para seleccionar un archivo';
+                    return;
+                }
+
+                fileNameDisplay.textContent = file.name + ' (' + sizeInMB + ' MB)';
+            } else {
+                fileNameDisplay.textContent = 'Haz clic para seleccionar un archivo';
+            }
+        }
+
+        // Borrar borrador
+        function borrarBorrador() {
+            if (confirm('¿Estás seguro de que deseas borrar el borrador?')) {
+                document.getElementById('asuntoInput').value = '';
+                document.getElementById('mensajeInput').value = '';
+                document.getElementById('adjuntoInput').value = '';
+                document.getElementById('fileName').textContent = 'Haz clic para seleccionar un archivo';
+                document.getElementById('asuntoCounter').textContent = '0';
+                document.getElementById('mensajeCounter').textContent = '0';
+            }
+        }
+
+        // Validar antes de enviar
+        document.getElementById('formCorreo').addEventListener('submit', function(e) {
+            const asunto = document.getElementById('asuntoInput').value.trim();
+            const mensaje = document.getElementById('mensajeInput').value.trim();
+
+            if (!asunto || !mensaje) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos obligatorios.');
+                return false;
+            }
+
+            // Confirmar envío
+            const confirmacion = confirm('¿Estás seguro de que deseas enviar este correo?');
+            if (!confirmacion) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
+

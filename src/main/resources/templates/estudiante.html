@@ -322,6 +322,15 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(77, 208, 225, 0.4);
         }
+
+        /* Paneles dinámicos */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -333,21 +342,25 @@
         </div>
 
         <div class="menu">
-            <a href="#" class="menu-item active">
+            <a href="#" class="menu-item active" onclick="mostrarPanel('principal'); return false;">
                 <span class="menu-item-icon">🏠</span>
                 <span>Principal</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanel('observador'); return false;">
                 <span class="menu-item-icon">👁️</span>
                 <span>Observador</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanel('historial'); return false;">
                 <span class="menu-item-icon">📊</span>
                 <span>Historial Académico</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanel('hoja-vida'); return false;">
                 <span class="menu-item-icon">📋</span>
                 <span>Hoja de Vida</span>
+            </a>
+            <a href="#" class="menu-item" onclick="mostrarPanel('enviar-correo'); return false;">
+                <span class="menu-item-icon">📧</span>
+                <span>Enviar Correo</span>
             </a>
         </div>
 
@@ -358,8 +371,10 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
+        <!-- Panel Principal -->
+        <div id="panel-principal" class="panel active">
+            <!-- Top Bar -->
+            <div class="top-bar">
             <div class="welcome-text">
                 <h2>¡Bienvenido, <span th:text="${nombreEstudiante}">Estudiante</span>!</h2>
                 <p th:text="${correoEstudiante}">correo@ejemplo.com</p>
@@ -497,7 +512,419 @@
                 </div>
             </div>
         </div>
+        </div>
+        <!-- Fin Panel Principal -->
+
+        <!-- Panel Enviar Correo -->
+        <div id="panel-enviar-correo" class="panel">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>📧 Enviar Correo Electrónico</h2>
+                    <p>Selecciona los destinatarios y compone tu mensaje</p>
+                </div>
+            </div>
+
+            <!-- Sección de selección de destinatarios -->
+            <div class="card" id="seccion-destinatarios">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>👥</span>
+                        <span>Seleccionar Destinatarios</span>
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #e65100;">
+                    <span>📊</span>
+                    <span>Destinatarios seleccionados: <strong id="contadorSeleccionados">0</strong></span>
+                </div>
+
+                <!-- Profesores -->
+                <div style="background: #f5f5f5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; background: #e0f7fa; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-size: 14px; color: #00838f; font-weight: 600;" onclick="toggleGrupoDestinatarios('Profesores')">
+                        <input type="checkbox" id="selectAll_Profesores" onclick="event.stopPropagation(); toggleGrupoDestinatarios('Profesores')">
+                        <span>Seleccionar todos los Profesores</span>
+                    </div>
+
+                    <h3 style="color: #26c6da; font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span>👨‍🏫</span>
+                        <span>Profesores</span>
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;" id="lista-profesores">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Directivos -->
+                <div style="background: #f5f5f5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; background: #e0f7fa; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-size: 14px; color: #00838f; font-weight: 600;" onclick="toggleGrupoDestinatarios('Directivos')">
+                        <input type="checkbox" id="selectAll_Directivos" onclick="event.stopPropagation(); toggleGrupoDestinatarios('Directivos')">
+                        <span>Seleccionar todos los Directivos</span>
+                    </div>
+
+                    <h3 style="color: #26c6da; font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span>👔</span>
+                        <span>Directivos</span>
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;" id="lista-directivos">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <button class="btn-primary" style="background: #f5f5f5; color: #546e7a;" onclick="mostrarPanel('principal')">
+                        ← Cancelar
+                    </button>
+                    <button class="btn-primary" id="btnContinuar" disabled onclick="mostrarSeccionComponer()">
+                        Continuar →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección de composición de correo -->
+            <div class="card" id="seccion-componer" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>✉️</span>
+                        <span>Componer Correo</span>
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #e65100;">
+                    <span>ℹ️</span>
+                    <strong>Importante:</strong> Los campos con asterisco (*) son obligatorios.
+                </div>
+
+                <form id="formEnviarCorreo">
+                    <!-- De -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">De:</label>
+                        <input type="text" class="form-control" th:value="${correoEstudiante}" disabled style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; background: #f5f5f5;">
+                    </div>
+
+                    <!-- Para -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">Para:</label>
+                        <div id="destinatarios-preview" style="padding: 12px; background: #f5f5f5; border-radius: 8px; font-size: 14px; color: #546e7a;"></div>
+                    </div>
+
+                    <!-- Asunto -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">
+                            Asunto: <span style="color: #e53935;">*</span>
+                        </label>
+                        <input type="text" id="asuntoInput" class="form-control" placeholder="Escribe el asunto del correo" required maxlength="200" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <div style="text-align: right; font-size: 12px; color: #78909c; margin-top: 5px;">
+                            <span id="asuntoCounter">0</span>/200 caracteres
+                        </div>
+                    </div>
+
+                    <!-- Mensaje -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">
+                            Mensaje: <span style="color: #e53935;">*</span>
+                        </label>
+                        <textarea id="mensajeInput" class="form-control" placeholder="Escribe tu mensaje aquí..." required maxlength="5000" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 200px; resize: vertical;"></textarea>
+                        <div style="text-align: right; font-size: 12px; color: #78909c; margin-top: 5px;">
+                            <span id="mensajeCounter">0</span>/5000 caracteres
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                        <button type="button" class="btn-primary" style="background: #f5f5f5; color: #546e7a;" onclick="volverADestinatarios()">
+                            ← Volver
+                        </button>
+                        <button type="button" class="btn-primary" style="background: #f5f5f5; color: #546e7a;" onclick="borrarBorrador()">
+                            🗑️ Borrar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            📧 Enviar Correo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Fin Panel Enviar Correo -->
+
+        <!-- Panel Observador -->
+        <div id="panel-observador" class="panel">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>👁️ Observador del Estudiante</h2>
+                    <p>Registro de comportamiento y seguimiento académico</p>
+                </div>
+            </div>
+            <div class="card">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Contenido del observador en desarrollo...</p>
+            </div>
+        </div>
+
+        <!-- Panel Historial Académico -->
+        <div id="panel-historial" class="panel">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>📊 Historial Académico</h2>
+                    <p>Consulta tus calificaciones y desempeño académico</p>
+                </div>
+            </div>
+            <div class="card">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Historial académico en desarrollo...</p>
+            </div>
+        </div>
+
+        <!-- Panel Hoja de Vida -->
+        <div id="panel-hoja-vida" class="panel">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>📋 Hoja de Vida</h2>
+                    <p>Información personal y documentación</p>
+                </div>
+            </div>
+            <div class="card">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Hoja de vida en desarrollo...</p>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Variables globales
+        let destinatariosSeleccionados = [];
+
+        // Función para mostrar paneles
+        function mostrarPanel(panelId) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Mostrar el panel seleccionado
+            document.getElementById('panel-' + panelId).classList.add('active');
+
+            // Actualizar menú activo
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+
+            // Si es el panel de correo, cargar destinatarios
+            if (panelId === 'enviar-correo') {
+                cargarDestinatarios();
+                mostrarSeccionDestinatarios();
+            }
+        }
+
+        // Cargar destinatarios desde la base de datos
+        async function cargarDestinatarios() {
+            try {
+                // Cargar profesores
+                const responseProfesores = await fetch('/api/destinatarios/profesores');
+                const profesores = await responseProfesores.json();
+                renderizarDestinatarios('profesores', profesores);
+
+                // Cargar directivos
+                const responseDirectivos = await fetch('/api/destinatarios/directivos');
+                const directivos = await responseDirectivos.json();
+                renderizarDestinatarios('directivos', directivos);
+            } catch (error) {
+                console.error('Error al cargar destinatarios:', error);
+                alert('Error al cargar la lista de destinatarios. Por favor, intenta de nuevo.');
+            }
+        }
+
+        function renderizarDestinatarios(grupo, lista) {
+            const container = document.getElementById(`lista-${grupo}`);
+            container.innerHTML = '';
+
+            lista.forEach(dest => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.setAttribute('data-grupo', grupo);
+                div.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: white; border-radius: 8px; border: 2px solid #e0e0e0; cursor: pointer; transition: all 0.3s;';
+
+                div.innerHTML = `
+                    <input type="checkbox" value="${dest.correo}" onchange="actualizarContadorDestinatarios()" style="width: 20px; height: 20px; cursor: pointer; accent-color: #26c6da;">
+                    <label style="cursor: pointer; flex: 1;">
+                        <div style="font-weight: 600; color: #37474f; font-size: 14px;">${dest.nombre}</div>
+                        <div style="font-size: 12px; color: #78909c; margin-top: 2px;">${dest.correo}</div>
+                    </label>
+                `;
+
+                div.addEventListener('click', function(e) {
+                    // Solo alternar el checkbox si NO se hizo clic directamente en el checkbox
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        actualizarContadorDestinatarios();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        function actualizarContadorDestinatarios() {
+            const checkboxes = document.querySelectorAll('#seccion-destinatarios input[type="checkbox"]:checked:not([id^="selectAll"])');
+            const contador = document.getElementById('contadorSeleccionados');
+            const btnContinuar = document.getElementById('btnContinuar');
+
+            destinatariosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
+            contador.textContent = destinatariosSeleccionados.length;
+            btnContinuar.disabled = destinatariosSeleccionados.length === 0;
+
+            // Actualizar "Seleccionar todos"
+            ['Profesores', 'Directivos'].forEach(grupo => {
+                const checkboxesGrupo = document.querySelectorAll(`#seccion-destinatarios .checkbox-item[data-grupo="${grupo.toLowerCase()}"] input[type="checkbox"]`);
+                const selectAll = document.getElementById(`selectAll_${grupo}`);
+                if (selectAll && checkboxesGrupo.length > 0) {
+                    const seleccionados = Array.from(checkboxesGrupo).filter(cb => cb.checked).length;
+                    selectAll.checked = seleccionados === checkboxesGrupo.length;
+                    selectAll.indeterminate = seleccionados > 0 && seleccionados < checkboxesGrupo.length;
+                }
+            });
+        }
+
+        function toggleGrupoDestinatarios(grupo) {
+            const selectAll = document.getElementById(`selectAll_${grupo}`);
+            const checkboxes = document.querySelectorAll(`#seccion-destinatarios .checkbox-item[data-grupo="${grupo.toLowerCase()}"] input[type="checkbox"]`);
+
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+
+            actualizarContadorDestinatarios();
+        }
+
+        function mostrarSeccionDestinatarios() {
+            document.getElementById('seccion-destinatarios').style.display = 'block';
+            document.getElementById('seccion-componer').style.display = 'none';
+        }
+
+        function mostrarSeccionComponer() {
+            if (destinatariosSeleccionados.length === 0) {
+                alert('Por favor, selecciona al menos un destinatario.');
+                return;
+            }
+
+            document.getElementById('seccion-destinatarios').style.display = 'none';
+            document.getElementById('seccion-componer').style.display = 'block';
+
+            // Mostrar destinatarios seleccionados
+            document.getElementById('destinatarios-preview').textContent = destinatariosSeleccionados.join(', ');
+        }
+
+        function volverADestinatarios() {
+            mostrarSeccionDestinatarios();
+        }
+
+        function borrarBorrador() {
+            if (confirm('¿Estás seguro de que deseas borrar el borrador?')) {
+                document.getElementById('asuntoInput').value = '';
+                document.getElementById('mensajeInput').value = '';
+                document.getElementById('asuntoCounter').textContent = '0';
+                document.getElementById('mensajeCounter').textContent = '0';
+            }
+        }
+
+        // Contadores de caracteres
+        document.addEventListener('DOMContentLoaded', function() {
+            const asuntoInput = document.getElementById('asuntoInput');
+            const mensajeInput = document.getElementById('mensajeInput');
+
+            if (asuntoInput) {
+                asuntoInput.addEventListener('input', function() {
+                    document.getElementById('asuntoCounter').textContent = this.value.length;
+                });
+            }
+
+            if (mensajeInput) {
+                mensajeInput.addEventListener('input', function() {
+                    document.getElementById('mensajeCounter').textContent = this.value.length;
+                });
+            }
+
+            // Enviar formulario
+            const formCorreo = document.getElementById('formEnviarCorreo');
+            if (formCorreo) {
+                formCorreo.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const asunto = document.getElementById('asuntoInput').value.trim();
+                    const mensaje = document.getElementById('mensajeInput').value.trim();
+
+                    if (!asunto || !mensaje) {
+                        alert('Por favor, completa todos los campos obligatorios.');
+                        return;
+                    }
+
+                    if (!confirm('¿Estás seguro de que deseas enviar este correo?')) {
+                        return;
+                    }
+
+                    // Mostrar indicador de carga
+                    const btnEnviar = this.querySelector('button[type="submit"]');
+                    const textoOriginal = btnEnviar.innerHTML;
+                    btnEnviar.disabled = true;
+                    btnEnviar.innerHTML = '📧 Enviando...';
+
+                    try {
+                        // Enviar correo al servidor
+                        const response = await fetch('/api/correo/enviar', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                destinatarios: destinatariosSeleccionados.join(','),
+                                asunto: asunto,
+                                mensaje: mensaje
+                            })
+                        });
+
+                        // Verificar si la respuesta es exitosa (status 200-299)
+                        if (!response.ok) {
+                            throw new Error(`Error del servidor: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Limpiar formulario ANTES de mostrar el mensaje
+                            document.getElementById('asuntoInput').value = '';
+                            document.getElementById('mensajeInput').value = '';
+                            document.getElementById('asuntoCounter').textContent = '0';
+                            document.getElementById('mensajeCounter').textContent = '0';
+                            destinatariosSeleccionados = [];
+
+                            // Limpiar checkboxes
+                            document.querySelectorAll('#seccion-destinatarios input[type="checkbox"]').forEach(cb => cb.checked = false);
+                            actualizarContadorDestinatarios();
+
+                            // Mostrar mensaje de éxito (y advertencia si existe)
+                            let mensaje = result.message;
+                            if (result.warning) {
+                                mensaje += '\n\n⚠️ ' + result.warning;
+                            }
+                            alert(mensaje);
+
+                            // Volver al panel principal
+                            mostrarPanel('principal');
+                        } else {
+                            alert('Error: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('Error al enviar correo:', error);
+                        alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.');
+                    } finally {
+                        // Restaurar botón
+                        btnEnviar.disabled = false;
+                        btnEnviar.innerHTML = textoOriginal;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 

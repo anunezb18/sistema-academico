@@ -240,6 +240,15 @@
             font-size: 16px;
             opacity: 0.95;
         }
+
+        /* Paneles dinámicos */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -251,29 +260,33 @@
         </div>
 
         <div class="menu">
-            <a href="#" class="menu-item active">
+            <a href="#" class="menu-item active" onclick="mostrarPanelDirectivo('principal'); return false;">
                 <span class="menu-item-icon">🏠</span>
                 <span>Principal</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('observador'); return false;">
                 <span class="menu-item-icon">👁️</span>
                 <span>Observador</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('historial'); return false;">
                 <span class="menu-item-icon">📚</span>
                 <span>Historial Académico</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('grupos'); return false;">
                 <span class="menu-item-icon">👥</span>
                 <span>Opciones de Grupo</span>
             </a>
-            <a href="#" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('hoja-vida'); return false;">
                 <span class="menu-item-icon">📄</span>
                 <span>Hoja de Vida</span>
             </a>
-            <a href="/directivo/aspirantes" class="menu-item">
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('aspirantes'); return false;">
                 <span class="menu-item-icon">🎓</span>
                 <span>Aspirantes en Proceso</span>
+            </a>
+            <a href="#" class="menu-item" onclick="mostrarPanelDirectivo('enviar-correo'); return false;">
+                <span class="menu-item-icon">📧</span>
+                <span>Enviar Correo</span>
             </a>
         </div>
 
@@ -287,8 +300,10 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Header -->
-        <div class="header">
+        <!-- Panel Principal -->
+        <div id="panel-principal" class="panel active">
+            <!-- Header -->
+            <div class="header">
             <div class="header-title">
                 <h2>Panel de Control</h2>
                 <p>Bienvenido al sistema de gestión académica</p>
@@ -331,10 +346,885 @@
                 </div>
             </div>
         </div>
+        </div>
+        <!-- Fin Panel Principal -->
+
+        <!-- Panel Enviar Correo -->
+        <div id="panel-enviar-correo" class="panel">
+            <div class="welcome-message">
+                <h2>📧 Enviar Correo Electrónico</h2>
+                <p>Selecciona los destinatarios y compone tu mensaje</p>
+            </div>
+
+            <!-- Sección de selección de destinatarios -->
+            <div class="content-section" id="seccion-destinatarios-directivo">
+                <h3>👥 Seleccionar Destinatarios</h3>
+
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #e65100;">
+                    <span>📊</span>
+                    <span>Destinatarios seleccionados: <strong id="contadorSeleccionadosDirectivo">0</strong></span>
+                </div>
+
+                <!-- Estudiantes -->
+                <div style="background: #f5f5f5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; background: #e0f7fa; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-size: 14px; color: #00838f; font-weight: 600;" onclick="toggleGrupoDirectivo('Estudiantes')">
+                        <input type="checkbox" id="selectAll_Estudiantes_Dir" onclick="event.stopPropagation(); toggleGrupoDirectivo('Estudiantes')">
+                        <span>Seleccionar todos los Estudiantes</span>
+                    </div>
+
+                    <h3 style="color: #26c6da; font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span>👨‍🎓</span>
+                        <span>Estudiantes</span>
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;" id="lista-estudiantes-dir">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Profesores -->
+                <div style="background: #f5f5f5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; background: #e0f7fa; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-size: 14px; color: #00838f; font-weight: 600;" onclick="toggleGrupoDirectivo('Profesores')">
+                        <input type="checkbox" id="selectAll_Profesores_Dir" onclick="event.stopPropagation(); toggleGrupoDirectivo('Profesores')">
+                        <span>Seleccionar todos los Profesores</span>
+                    </div>
+
+                    <h3 style="color: #26c6da; font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span>👨‍🏫</span>
+                        <span>Profesores</span>
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;" id="lista-profesores-dir">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <button style="padding: 14px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; background: #f5f5f5; color: #546e7a;" onclick="mostrarPanelDirectivo('principal')">
+                        ← Cancelar
+                    </button>
+                    <button style="padding: 14px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white;" id="btnContinuarDirectivo" disabled onclick="mostrarSeccionComponerDirectivo()">
+                        Continuar →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección de composición de correo -->
+            <div class="content-section" id="seccion-componer-directivo" style="display: none;">
+                <h3>✉️ Componer Correo</h3>
+
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #e65100;">
+                    <span>ℹ️</span>
+                    <strong>Importante:</strong> Los campos con asterisco (*) son obligatorios.
+                </div>
+
+                <form id="formEnviarCorreoDirectivo">
+                    <!-- De -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">De:</label>
+                        <input type="text" th:value="${correoDirectivo}" disabled style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; background: #f5f5f5;">
+                    </div>
+
+                    <!-- Para -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">Para:</label>
+                        <div id="destinatarios-preview-directivo" style="padding: 12px; background: #f5f5f5; border-radius: 8px; font-size: 14px; color: #546e7a;"></div>
+                    </div>
+
+                    <!-- Asunto -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">
+                            Asunto: <span style="color: #e53935;">*</span>
+                        </label>
+                        <input type="text" id="asuntoInputDirectivo" placeholder="Escribe el asunto del correo" required maxlength="200" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <div style="text-align: right; font-size: 12px; color: #78909c; margin-top: 5px;">
+                            <span id="asuntoCounterDirectivo">0</span>/200 caracteres
+                        </div>
+                    </div>
+
+                    <!-- Mensaje -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 8px; font-size: 14px;">
+                            Mensaje: <span style="color: #e53935;">*</span>
+                        </label>
+                        <textarea id="mensajeInputDirectivo" placeholder="Escribe tu mensaje aquí..." required maxlength="5000" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 200px; resize: vertical;"></textarea>
+                        <div style="text-align: right; font-size: 12px; color: #78909c; margin-top: 5px;">
+                            <span id="mensajeCounterDirectivo">0</span>/5000 caracteres
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                        <button type="button" style="padding: 14px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; background: #f5f5f5; color: #546e7a;" onclick="volverADestinatariosDirectivo()">
+                            ← Volver
+                        </button>
+                        <button type="button" style="padding: 14px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; background: #f5f5f5; color: #546e7a;" onclick="borrarBorradorDirectivo()">
+                            🗑️ Borrar
+                        </button>
+                        <button type="submit" style="padding: 14px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white;">
+                            📧 Enviar Correo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Fin Panel Enviar Correo -->
+
+        <!-- Otros paneles -->
+        <div id="panel-observador" class="panel">
+            <div class="welcome-message">
+                <h2>👁️ Observador</h2>
+                <p>Gestión de observaciones de estudiantes</p>
+            </div>
+            <div class="content-section">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Módulo de observador en desarrollo...</p>
+            </div>
+        </div>
+
+        <div id="panel-historial" class="panel">
+            <div class="welcome-message">
+                <h2>📚 Historial Académico</h2>
+                <p>Seguimiento del desempeño académico</p>
+            </div>
+            <div class="content-section">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Historial académico en desarrollo...</p>
+            </div>
+        </div>
+
+        <div id="panel-grupos" class="panel">
+            <div class="welcome-message">
+                <h2>👥 Opciones de Grupo</h2>
+                <p>Gestión de grupos y asignaciones</p>
+            </div>
+            <div class="content-section">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Módulo de grupos en desarrollo...</p>
+            </div>
+        </div>
+
+        <div id="panel-hoja-vida" class="panel">
+            <div class="welcome-message">
+                <h2>📄 Hoja de Vida</h2>
+                <p>Información del directivo</p>
+            </div>
+            <div class="content-section">
+                <p style="text-align: center; padding: 40px; color: #78909c;">Hoja de vida en desarrollo...</p>
+            </div>
+        </div>
+
+        <!-- Panel Aspirantes -->
+        <div id="panel-aspirantes" class="panel">
+            <div class="welcome-message">
+                <h2>🎓 Aspirantes en Proceso</h2>
+                <p>Gestiona y revisa las solicitudes de admisión</p>
+            </div>
+
+            <!-- Buscador -->
+            <div class="content-section" style="margin-bottom: 25px;">
+                <h3>🔍 Buscar Aspirante</h3>
+                <div style="display: flex; gap: 15px; align-items: center; margin-top: 20px;">
+                    <input type="text" id="searchAspiranteInput" placeholder="Buscar por nombre o grado..." style="flex: 1; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                    <button onclick="buscarAspirante()" style="padding: 15px 35px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                        Buscar
+                    </button>
+                </div>
+                <p style="color: #90a4ae; font-size: 13px; margin-top: 10px;">💡 Busca por nombre completo o grado al que aspira</p>
+            </div>
+
+            <!-- Resultados de búsqueda -->
+            <div id="search-results-aspirantes" class="content-section" style="display: none; margin-bottom: 25px;">
+                <h3>📋 Resultados de Búsqueda</h3>
+                <div id="search-results-list"></div>
+            </div>
+
+            <!-- Lista de aspirantes -->
+            <div class="content-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e0f7fa;">
+                    <h3 style="color: #37474f; font-size: 22px; display: flex; align-items: center; gap: 10px;">
+                        <span>👥</span>
+                        <span>Tomar Decisiones</span>
+                    </h3>
+                    <span id="contador-aspirantes" style="background: #e0f7fa; padding: 8px 15px; border-radius: 20px; color: #00838f; font-weight: 600;">
+                        0 aspirantes
+                    </span>
+                </div>
+
+                <div id="aspirantes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div id="no-aspirantes" style="text-align: center; padding: 60px 20px; display: none;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                    <h3 style="color: #78909c; margin-bottom: 10px;">No hay aspirantes en proceso</h3>
+                    <p style="color: #b0bec5;">Los nuevos aspirantes aparecerán aquí</p>
+                </div>
+            </div>
+        </div>
+        <!-- Fin Panel Aspirantes -->
+
+        <!-- Panel Detalle Aspirante -->
+        <div id="panel-detalle-aspirante" class="panel">
+            <div class="welcome-message">
+                <h2>📋 Detalles del Aspirante</h2>
+                <p>Revisa la información completa y toma una decisión</p>
+            </div>
+
+            <div class="content-section">
+                <button onclick="volverAListaAspirantes()" style="padding: 10px 20px; background: #f5f5f5; color: #546e7a; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 20px;">
+                    ← Volver a la lista
+                </button>
+
+                <div id="detalle-aspirante-content">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+        <!-- Fin Panel Detalle Aspirante -->
     </div>
 
     <script>
-        // Activar menu item al hacer click
+        // Variables globales para directivo
+        let destinatariosSeleccionadosDirectivo = [];
+
+        // Función para mostrar paneles de directivo
+        function mostrarPanelDirectivo(panelId) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Mostrar el panel seleccionado
+            document.getElementById('panel-' + panelId).classList.add('active');
+
+            // Actualizar menú activo
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Buscar y activar el menu-item correcto basado en el panelId
+            if (panelId === 'principal') {
+                document.querySelector('.menu-item[onclick*="principal"]').classList.add('active');
+            } else if (panelId === 'observador') {
+                document.querySelector('.menu-item[onclick*="observador"]').classList.add('active');
+            } else if (panelId === 'historial') {
+                document.querySelector('.menu-item[onclick*="historial"]').classList.add('active');
+            } else if (panelId === 'grupos') {
+                document.querySelector('.menu-item[onclick*="grupos"]').classList.add('active');
+            } else if (panelId === 'hoja-vida') {
+                document.querySelector('.menu-item[onclick*="hoja-vida"]').classList.add('active');
+            } else if (panelId === 'aspirantes') {
+                document.querySelector('.menu-item[onclick*="aspirantes"]').classList.add('active');
+            } else if (panelId === 'enviar-correo') {
+                document.querySelector('.menu-item[onclick*="enviar-correo"]').classList.add('active');
+            }
+
+            // Si es el panel de correo, cargar destinatarios
+            if (panelId === 'enviar-correo') {
+                cargarDestinatariosDirectivo();
+                mostrarSeccionDestinatariosDirectivo();
+            }
+
+            // Si es el panel de aspirantes, cargar aspirantes
+            if (panelId === 'aspirantes') {
+                cargarAspirantes();
+            }
+        }
+
+        async function cargarDestinatariosDirectivo() {
+            try {
+                // Cargar estudiantes
+                const responseEstudiantes = await fetch('/api/destinatarios/estudiantes');
+                const estudiantes = await responseEstudiantes.json();
+                renderizarDestinatariosDirectivo('estudiantes-dir', estudiantes);
+
+                // Cargar profesores
+                const responseProfesores = await fetch('/api/destinatarios/profesores');
+                const profesores = await responseProfesores.json();
+                renderizarDestinatariosDirectivo('profesores-dir', profesores);
+            } catch (error) {
+                console.error('Error al cargar destinatarios:', error);
+                alert('Error al cargar la lista de destinatarios. Por favor, intenta de nuevo.');
+            }
+        }
+
+        function renderizarDestinatariosDirectivo(grupo, lista) {
+            const container = document.getElementById(`lista-${grupo}`);
+            container.innerHTML = '';
+
+            lista.forEach(dest => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.setAttribute('data-grupo-dir', grupo.split('-')[0]);
+                div.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: white; border-radius: 8px; border: 2px solid #e0e0e0; cursor: pointer; transition: all 0.3s;';
+
+                div.innerHTML = `
+                    <input type="checkbox" value="${dest.correo}" onchange="actualizarContadorDirectivo()" style="width: 20px; height: 20px; cursor: pointer; accent-color: #26c6da;">
+                    <label style="cursor: pointer; flex: 1;">
+                        <div style="font-weight: 600; color: #37474f; font-size: 14px;">${dest.nombre}</div>
+                        <div style="font-size: 12px; color: #78909c; margin-top: 2px;">${dest.correo}</div>
+                    </label>
+                `;
+
+                div.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        actualizarContadorDirectivo();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        function actualizarContadorDirectivo() {
+            const checkboxes = document.querySelectorAll('#seccion-destinatarios-directivo input[type="checkbox"]:checked:not([id^="selectAll"])');
+            const contador = document.getElementById('contadorSeleccionadosDirectivo');
+            const btnContinuar = document.getElementById('btnContinuarDirectivo');
+
+            destinatariosSeleccionadosDirectivo = Array.from(checkboxes).map(cb => cb.value);
+            contador.textContent = destinatariosSeleccionadosDirectivo.length;
+            btnContinuar.disabled = destinatariosSeleccionadosDirectivo.length === 0;
+
+            // Actualizar "Seleccionar todos"
+            ['Estudiantes', 'Profesores'].forEach(grupo => {
+                const checkboxesGrupo = document.querySelectorAll(`#seccion-destinatarios-directivo .checkbox-item[data-grupo-dir="${grupo.toLowerCase()}"] input[type="checkbox"]`);
+                const selectAll = document.getElementById(`selectAll_${grupo}_Dir`);
+                if (selectAll && checkboxesGrupo.length > 0) {
+                    const seleccionados = Array.from(checkboxesGrupo).filter(cb => cb.checked).length;
+                    selectAll.checked = seleccionados === checkboxesGrupo.length;
+                    selectAll.indeterminate = seleccionados > 0 && seleccionados < checkboxesGrupo.length;
+                }
+            });
+        }
+
+        function toggleGrupoDirectivo(grupo) {
+            const selectAll = document.getElementById(`selectAll_${grupo}_Dir`);
+            const checkboxes = document.querySelectorAll(`#seccion-destinatarios-directivo .checkbox-item[data-grupo-dir="${grupo.toLowerCase()}"] input[type="checkbox"]`);
+
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+
+            actualizarContadorDirectivo();
+        }
+
+        function mostrarSeccionDestinatariosDirectivo() {
+            document.getElementById('seccion-destinatarios-directivo').style.display = 'block';
+            document.getElementById('seccion-componer-directivo').style.display = 'none';
+        }
+
+        function mostrarSeccionComponerDirectivo() {
+            if (destinatariosSeleccionadosDirectivo.length === 0) {
+                alert('Por favor, selecciona al menos un destinatario.');
+                return;
+            }
+
+            document.getElementById('seccion-destinatarios-directivo').style.display = 'none';
+            document.getElementById('seccion-componer-directivo').style.display = 'block';
+
+            // Mostrar destinatarios seleccionados
+            document.getElementById('destinatarios-preview-directivo').textContent = destinatariosSeleccionadosDirectivo.join(', ');
+        }
+
+        function volverADestinatariosDirectivo() {
+            mostrarSeccionDestinatariosDirectivo();
+        }
+
+        function borrarBorradorDirectivo() {
+            if (confirm('¿Estás seguro de que deseas borrar el borrador?')) {
+                document.getElementById('asuntoInputDirectivo').value = '';
+                document.getElementById('mensajeInputDirectivo').value = '';
+                document.getElementById('asuntoCounterDirectivo').textContent = '0';
+                document.getElementById('mensajeCounterDirectivo').textContent = '0';
+            }
+        }
+
+        // Contadores de caracteres y eventos
+        document.addEventListener('DOMContentLoaded', function() {
+            const asuntoInputDir = document.getElementById('asuntoInputDirectivo');
+            const mensajeInputDir = document.getElementById('mensajeInputDirectivo');
+
+            if (asuntoInputDir) {
+                asuntoInputDir.addEventListener('input', function() {
+                    document.getElementById('asuntoCounterDirectivo').textContent = this.value.length;
+                });
+            }
+
+            if (mensajeInputDir) {
+                mensajeInputDir.addEventListener('input', function() {
+                    document.getElementById('mensajeCounterDirectivo').textContent = this.value.length;
+                });
+            }
+
+            // Enviar formulario
+            const formCorreoDir = document.getElementById('formEnviarCorreoDirectivo');
+            if (formCorreoDir) {
+                formCorreoDir.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const asunto = document.getElementById('asuntoInputDirectivo').value.trim();
+                    const mensaje = document.getElementById('mensajeInputDirectivo').value.trim();
+
+                    if (!asunto || !mensaje) {
+                        alert('Por favor, completa todos los campos obligatorios.');
+                        return;
+                    }
+
+                    if (!confirm('¿Estás seguro de que deseas enviar este correo?')) {
+                        return;
+                    }
+
+                    // Mostrar indicador de carga
+                    const btnEnviar = this.querySelector('button[type="submit"]');
+                    const textoOriginal = btnEnviar.innerHTML;
+                    btnEnviar.disabled = true;
+                    btnEnviar.innerHTML = '📧 Enviando...';
+
+                    try {
+                        // Enviar correo al servidor
+                        const response = await fetch('/api/correo/enviar', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                destinatarios: destinatariosSeleccionadosDirectivo.join(','),
+                                asunto: asunto,
+                                mensaje: mensaje
+                            })
+                        });
+
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+
+                        // Verificar si la respuesta es exitosa (status 200-299)
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('Server error:', errorText);
+                            throw new Error(`Error del servidor: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        console.log('Result:', result);
+
+                        if (result.success) {
+                            // Limpiar formulario PRIMERO
+                            document.getElementById('asuntoInputDirectivo').value = '';
+                            document.getElementById('mensajeInputDirectivo').value = '';
+                            document.getElementById('asuntoCounterDirectivo').textContent = '0';
+                            document.getElementById('mensajeCounterDirectivo').textContent = '0';
+
+                            // Limpiar checkboxes
+                            document.querySelectorAll('#seccion-destinatarios-directivo input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+                            // Limpiar array de destinatarios
+                            destinatariosSeleccionadosDirectivo = [];
+
+                            // Actualizar contador
+                            actualizarContadorDirectivo();
+
+                            // Mostrar mensaje de éxito (y advertencia si existe)
+                            let mensajeAlerta = result.message;
+                            if (result.warning) {
+                                mensajeAlerta += '\n\n⚠️ ' + result.warning;
+                            }
+
+                            alert(mensajeAlerta);
+
+                            // Volver al panel principal
+                            mostrarPanelDirectivo('principal');
+                        } else {
+                            console.error('Success false:', result.message);
+                            alert('Error: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('Error completo:', error);
+                        console.error('Error stack:', error.stack);
+                        alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.\n\nDetalle: ' + error.message);
+                    } finally {
+                        // Restaurar botón
+                        btnEnviar.disabled = false;
+                        btnEnviar.innerHTML = textoOriginal;
+                    }
+                });
+            }
+        });
+
+        // ===== FUNCIONES PARA ASPIRANTES =====
+        let aspirantesData = [];
+
+        async function cargarAspirantes() {
+            try {
+                const response = await fetch('/api/destinatarios/aspirantes');
+                aspirantesData = await response.json();
+                renderizarAspirantes(aspirantesData);
+            } catch (error) {
+                console.error('Error al cargar aspirantes:', error);
+                alert('Error al cargar la lista de aspirantes. Por favor, intenta de nuevo.');
+            }
+        }
+
+        function renderizarAspirantes(aspirantes) {
+            const container = document.getElementById('aspirantes-grid');
+            const noAspirantes = document.getElementById('no-aspirantes');
+            const contador = document.getElementById('contador-aspirantes');
+
+            container.innerHTML = '';
+
+            if (aspirantes.length === 0) {
+                noAspirantes.style.display = 'block';
+                contador.textContent = '0 aspirantes';
+                return;
+            }
+
+            noAspirantes.style.display = 'none';
+            contador.textContent = `${aspirantes.length} aspirante${aspirantes.length !== 1 ? 's' : ''}`;
+
+            aspirantes.forEach(asp => {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%); border-radius: 12px; padding: 20px; border-left: 5px solid #26c6da; transition: all 0.3s ease; cursor: pointer;';
+
+                // Determinar color y texto del estado
+                let estadoBadge = '';
+                const estado = (asp.estado || 'PENDIENTE').toUpperCase();
+
+                if (estado === 'ACEPTADO' || estado === 'APROBADO') {
+                    estadoBadge = '<span style="background: #4caf50; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✓ ACEPTADO</span>';
+                } else if (estado === 'RECHAZADO') {
+                    estadoBadge = '<span style="background: #f44336; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✗ RECHAZADO</span>';
+                } else {
+                    estadoBadge = '<span style="background: #ff9800; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">⏱ PENDIENTE</span>';
+                }
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <h4 style="color: #006064; font-size: 18px; margin: 0;">${asp.nombre}</h4>
+                                ${estadoBadge}
+                            </div>
+                            <p style="color: #546e7a; font-size: 14px; margin: 4px 0;"><strong>Grado:</strong> ${asp.grado || 'No especificado'}</p>
+                            <p style="color: #546e7a; font-size: 14px; margin: 4px 0;"><strong>Correo:</strong> ${asp.correo || 'No disponible'}</p>
+                        </div>
+                        <button onclick="event.stopPropagation(); verDetalleAspirante(${asp.idAspirante})" style="padding: 10px 20px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                            Ver Detalles
+                        </button>
+                    </div>
+                `;
+
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                    this.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.12)';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        function buscarAspirante() {
+            const query = document.getElementById('searchAspiranteInput').value.toLowerCase().trim();
+
+            if (!query) {
+                renderizarAspirantes(aspirantesData);
+                document.getElementById('search-results-aspirantes').style.display = 'none';
+                return;
+            }
+
+            const resultados = aspirantesData.filter(asp =>
+                asp.nombre.toLowerCase().includes(query) ||
+                (asp.grado && asp.grado.toLowerCase().includes(query))
+            );
+
+            const resultsSection = document.getElementById('search-results-aspirantes');
+            const resultsList = document.getElementById('search-results-list');
+
+            resultsList.innerHTML = '';
+
+            if (resultados.length === 0) {
+                resultsList.innerHTML = '<p style="text-align: center; padding: 20px; color: #78909c;">No se encontraron resultados</p>';
+            } else {
+                resultados.forEach(asp => {
+                    const resultCard = document.createElement('div');
+                    resultCard.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 20px; background: linear-gradient(135deg, #e1f5fe 0%, #f1f8fb 100%); border-radius: 12px; border-left: 5px solid #26c6da; margin-bottom: 15px;';
+
+                    resultCard.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                                👤
+                            </div>
+                            <div>
+                                <h4 style="color: #006064; font-size: 18px; margin-bottom: 5px;">${asp.nombre}</h4>
+                                <p style="color: #546e7a; font-size: 14px; margin: 3px 0;"><strong>Grado:</strong> ${asp.grado || 'No especificado'}</p>
+                                <p style="color: #546e7a; font-size: 14px; margin: 3px 0;"><strong>Correo:</strong> ${asp.correo || 'No disponible'}</p>
+                            </div>
+                        </div>
+                        <button onclick="verDetalleAspirante(${asp.idAspirante})" style="padding: 12px 30px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                            Ver Detalles
+                        </button>
+                    `;
+
+                    resultsList.appendChild(resultCard);
+                });
+            }
+
+            resultsSection.style.display = 'block';
+        }
+
+        function verDetalleAspirante(idAspirante) {
+            // Buscar el aspirante en los datos
+            const aspirante = aspirantesData.find(asp => asp.idAspirante === idAspirante);
+
+            if (!aspirante) {
+                alert('No se pudo cargar la información del aspirante');
+                return;
+            }
+
+            // Renderizar el detalle
+            renderizarDetalleAspirante(aspirante);
+
+            // Cambiar al panel de detalle
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('panel-detalle-aspirante').classList.add('active');
+        }
+
+        function renderizarDetalleAspirante(asp) {
+            const container = document.getElementById('detalle-aspirante-content');
+
+            // Determinar estado
+            const estado = (asp.estado || 'PENDIENTE').toUpperCase();
+            let estadoBadge = '';
+            let colorEstado = '';
+
+            if (estado === 'ACEPTADO' || estado === 'APROBADO') {
+                estadoBadge = '✓ ACEPTADO';
+                colorEstado = '#4caf50';
+            } else if (estado === 'RECHAZADO') {
+                estadoBadge = '✗ RECHAZADO';
+                colorEstado = '#f44336';
+            } else {
+                estadoBadge = '⏱ PENDIENTE';
+                colorEstado = '#ff9800';
+            }
+
+            container.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+                    <!-- Encabezado -->
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e0f7fa;">
+                        <div>
+                            <h2 style="color: #006064; font-size: 28px; margin-bottom: 10px;">${asp.nombre || 'Sin nombre'}</h2>
+                            <p style="color: #78909c; font-size: 16px;">Grado aspirante: ${asp.grado || 'No especificado'}</p>
+                        </div>
+                        <div style="background: ${colorEstado}; color: white; padding: 12px 24px; border-radius: 25px; font-size: 16px; font-weight: 600;">
+                            ${estadoBadge}
+                        </div>
+                    </div>
+
+                    <!-- Información Personal -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #00838f; font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <span>👤</span>
+                            <span>Información Personal</span>
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Edad:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.edad || 'No especificada'} años</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Fecha de Nacimiento:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.fechaNacimiento || 'No especificada'}</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Dirección:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.direccion || 'No especificada'}</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Tipo de Sangre:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.tipoSangre || 'No especificado'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Médica -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #00838f; font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <span>🏥</span>
+                            <span>Información Médica</span>
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                                <strong style="color: #e65100;">Alergias:</strong>
+                                <p style="color: #5d4037; margin-top: 5px;">${asp.alergias || 'Ninguna reportada'}</p>
+                            </div>
+                            <div style="background: #ffebee; padding: 15px; border-radius: 8px; border-left: 4px solid #f44336;">
+                                <strong style="color: #c62828;">Condiciones Médicas:</strong>
+                                <p style="color: #5d4037; margin-top: 5px;">${asp.condicionesMedicas || 'Ninguna reportada'}</p>
+                            </div>
+                            <div style="background: #e1f5fe; padding: 15px; border-radius: 8px; border-left: 4px solid #26c6da;">
+                                <strong style="color: #00838f;">Medicamentos:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.medicamentos || 'Ninguno reportado'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Responsable -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #00838f; font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <span>👨‍👩‍👧</span>
+                            <span>Información del Responsable</span>
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Nombre:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.nombreResponsable || 'No especificado'}</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Parentesco:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.parentescoResponsable || 'No especificado'}</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Teléfono:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.telefonoResponsable || 'No especificado'}</p>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                                <strong style="color: #546e7a;">Correo:</strong>
+                                <p style="color: #37474f; margin-top: 5px;">${asp.correo || 'No especificado'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    ${asp.observaciones ? `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #00838f; font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <span>📝</span>
+                            <span>Observaciones</span>
+                        </h3>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            <p style="color: #37474f;">${asp.observaciones}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Botones de Acción -->
+                    ${estado === 'PENDIENTE' || estado === 'NUEVO' || estado === 'REVISAR' ? `
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                        <button onclick="aceptarAspirante(${asp.idAspirante}, '${asp.nombre}')" style="padding: 15px 40px; background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                            ✓ Aceptar Aspirante
+                        </button>
+                        <button onclick="rechazarAspirante(${asp.idAspirante})" style="padding: 15px 40px; background: linear-gradient(135deg, #ef5350 0%, #e53935 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                            ✗ Rechazar Aspirante
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function volverAListaAspirantes() {
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('panel-aspirantes').classList.add('active');
+        }
+
+        async function aceptarAspirante(idAspirante, nombre) {
+            if (!confirm(`¿Estás seguro de que deseas ACEPTAR a ${nombre}?\n\nSe creará un estudiante y se enviará una notificación por correo.`)) {
+                return;
+            }
+
+            try {
+                // Mostrar indicador de carga
+                const btnAceptar = event.target;
+                const textoOriginal = btnAceptar.innerHTML;
+                btnAceptar.disabled = true;
+                btnAceptar.innerHTML = '⏳ Procesando...';
+
+                // Hacer petición POST usando fetch con FormData
+                const formData = new FormData();
+                const response = await fetch(`/directivo/aspirantes/${idAspirante}/aceptar`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert(`✅ ${nombre} ha sido aceptado exitosamente.\n\nSe ha creado el estudiante y enviado la notificación por correo.`);
+
+                    // Recargar la lista de aspirantes
+                    await cargarAspirantes();
+
+                    // Volver a la lista
+                    volverAListaAspirantes();
+                } else {
+                    const text = await response.text();
+                    alert(`❌ Error al aceptar el aspirante.\n\n${text}`);
+                    btnAceptar.disabled = false;
+                    btnAceptar.innerHTML = textoOriginal;
+                }
+            } catch (error) {
+                console.error('Error al aceptar aspirante:', error);
+                alert('❌ Error al procesar la solicitud. Por favor, intenta de nuevo.');
+            }
+        }
+
+        async function rechazarAspirante(idAspirante) {
+            const razon = prompt('Ingresa la razón del rechazo:');
+            if (!razon || !razon.trim()) {
+                return;
+            }
+
+            try {
+                // Mostrar indicador de carga
+                const btnRechazar = event.target;
+                const textoOriginal = btnRechazar.innerHTML;
+                btnRechazar.disabled = true;
+                btnRechazar.innerHTML = '⏳ Procesando...';
+
+                // Hacer petición POST con la razón
+                const formData = new FormData();
+                formData.append('razonRechazo', razon.trim());
+
+                const response = await fetch(`/directivo/aspirantes/${idAspirante}/rechazar`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert(`✅ El aspirante ha sido rechazado.\n\nSe ha enviado una notificación con la razón del rechazo.`);
+
+                    // Recargar la lista de aspirantes
+                    await cargarAspirantes();
+
+                    // Volver a la lista
+                    volverAListaAspirantes();
+                } else {
+                    const text = await response.text();
+                    alert(`❌ Error al rechazar el aspirante.\n\n${text}`);
+                    btnRechazar.disabled = false;
+                    btnRechazar.innerHTML = textoOriginal;
+                }
+            } catch (error) {
+                console.error('Error al rechazar aspirante:', error);
+                alert('❌ Error al procesar la solicitud. Por favor, intenta de nuevo.');
+            }
+        }
+
+        // Permitir buscar con Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchAspiranteInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        buscarAspirante();
+                    }
+                });
+            }
+        });
+
+        // Activar menu item al hacer click (mantener funcionalidad existente)
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 // Solo prevenir navegación si el href es "#"
