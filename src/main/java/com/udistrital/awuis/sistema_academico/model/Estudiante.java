@@ -32,6 +32,10 @@ public class Estudiante {
     @Column(name = "\"idHistorialAcademico\"")
     private Integer idHistorialAcademico;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "\"idHistorialAcademico\"", insertable = false, updatable = false)
+    private HistorialAcademico historialAcademico;
+
     @Column(name = "\"fechaIngreso\"")
     private LocalDate fechaIngreso;
 
@@ -96,6 +100,14 @@ public class Estudiante {
 
     public void setIdHistorialAcademico(Integer idHistorialAcademico) {
         this.idHistorialAcademico = idHistorialAcademico;
+    }
+
+    public HistorialAcademico getHistorialAcademico() {
+        return historialAcademico;
+    }
+
+    public void setHistorialAcademico(HistorialAcademico historialAcademico) {
+        this.historialAcademico = historialAcademico;
     }
 
     public LocalDate getFechaIngreso() {

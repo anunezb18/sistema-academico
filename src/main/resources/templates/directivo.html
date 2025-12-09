@@ -527,8 +527,52 @@
                 <h2>👁️ Observador</h2>
                 <p>Gestión de observaciones de estudiantes</p>
             </div>
+
+            <!-- Search and Filter Section -->
+            <div class="content-section" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 300px; position: relative;">
+                        <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #78909c; font-size: 18px;">🔍</span>
+                        <input type="text"
+                               id="searchStudentInput"
+                               placeholder="Buscar por nombre o ID de estudiante..."
+                               style="width: 100%; padding: 12px 20px 12px 45px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="filterByGroupObservador" style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="filterByGroupObservador" style="font-size: 15px; color: #546e7a; font-weight: 500; cursor: pointer;">Filtrar por grupo</label>
+                    </div>
+
+                    <select id="groupSelectObservador" class="form-control" style="padding: 12px 20px; border-radius: 8px; min-width: 200px;" disabled>
+                        <option value="">Todos los grupos</option>
+                        <!-- Los grupos se cargarán dinámicamente -->
+                    </select>
+                </div>
+
+                <p style="color: #90a4ae; font-size: 13px; margin-top: 10px;">
+                    💡 Busca por nombre completo o ID de estudiante
+                </p>
+            </div>
+
+            <!-- Students Grid -->
             <div class="content-section">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Módulo de observador en desarrollo...</p>
+                <h3 style="color: #37474f; font-size: 20px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e0f2f1;" id="observadorTitleCount">
+                    Todos los estudiantes
+                </h3>
+
+                <div id="studentsObservadorGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                    <!-- Las tarjetas de estudiantes se cargarán aquí -->
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingStudentsObservador" style="text-align: center; padding: 40px; color: #26a69a;">
+                    <div style="border: 4px solid #e0f2f1; border-top: 4px solid #26a69a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                    <p>Cargando estudiantes...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyStudentsObservador" style="display: none;"></div>
             </div>
         </div>
 
@@ -1037,7 +1081,6 @@
             // Inicialización al cargar la página
             document.addEventListener('DOMContentLoaded', function() {
                 // Cargar datos iniciales si estamos en el panel de grupos
-                const panelInicial = '[[${panelInicial}]]';
                 if (panelInicial === 'grupos') {
                     mostrarPanelDirectivo('grupos');
                 }
@@ -1157,6 +1200,15 @@
 
         // Variables globales para directivo
         let destinatariosSeleccionadosDirectivo = [];
+        const panelInicial = /*[[${panelInicial}]]*/ 'principal';
+
+        // ========================================
+        // MÓDULO DE OBSERVADOR - Declaración anticipada
+        // ========================================
+
+        let todosLosEstudiantesObservador = [];
+        let todosLosGruposObservador = [];
+        let estudianteSeleccionadoObservador = null;
 
         // Función para mostrar paneles de directivo
         function mostrarPanelDirectivo(panelId) {
@@ -1178,6 +1230,7 @@
                 document.querySelector('.menu-item[onclick*="principal"]').classList.add('active');
             } else if (panelId === 'observador') {
                 document.querySelector('.menu-item[onclick*="observador"]').classList.add('active');
+                cargarEstudiantesObservador();
             } else if (panelId === 'historial') {
                 document.querySelector('.menu-item[onclick*="historial"]').classList.add('active');
             } else if (panelId === 'grupos') {
@@ -1825,8 +1878,6 @@
                 });
             });
 
-            // Detectar panel inicial desde el servidor
-            const panelInicial = /*[[${panelInicial}]]*/ 'principal';
 
             // Si viene con un panel específico diferente a 'principal', mostrarlo
             if (panelInicial && panelInicial !== 'principal') {
@@ -2025,6 +2076,534 @@
         if (panelInicial === 'grupos') {
             setTimeout(ocultarAlertasAutomaticamente, 200);
         }
+
+        // ========================================
+        // MÓDULO DE OBSERVADOR - Funciones
+        // ========================================
+
+
+        async function cargarEstudiantesObservador() {
+            const grid = document.getElementById('studentsObservadorGrid');
+            const loading = document.getElementById('loadingStudentsObservador');
+            const empty = document.getElementById('emptyStudentsObservador');
+
+            loading.style.display = 'block';
+            grid.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const responseEstudiantes = await fetch('/directivo/api/estudiantes');
+                if (!responseEstudiantes.ok) {
+                    throw new Error('Error al cargar estudiantes');
+                }
+
+                const estudiantesData = await responseEstudiantes.json();
+                todosLosEstudiantesObservador = estudiantesData;
+
+                const responseGrupos = await fetch('/directivo/api/grupos');
+                if (responseGrupos.ok) {
+                    const gruposData = await responseGrupos.json();
+                    todosLosGruposObservador = gruposData;
+                    cargarGruposSelectObservador();
+                }
+
+                mostrarEstudiantesObservador(estudiantesData);
+            } catch (error) {
+                console.error('Error completo:', error);
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+                empty.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: #e53935;"><div style="font-size: 64px; margin-bottom: 20px;">❌</div><p style="font-size: 18px; margin-bottom: 10px;">Error al cargar estudiantes</p><small>' + error.message + '</small></div>';
+            }
+        }
+
+        function cargarGruposSelectObservador() {
+            const select = document.getElementById('groupSelectObservador');
+            select.innerHTML = '<option value="">Todos los grupos</option>';
+            todosLosGruposObservador.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.idGrupo;
+                option.textContent = grupo.nombre;
+                select.appendChild(option);
+            });
+        }
+
+        function mostrarEstudiantesObservador(estudiantes, esFiltrado = false) {
+            const grid = document.getElementById('studentsObservadorGrid');
+            const loading = document.getElementById('loadingStudentsObservador');
+            const empty = document.getElementById('emptyStudentsObservador');
+
+            loading.style.display = 'none';
+            empty.style.display = 'none';
+
+            if (estudiantes.length === 0) {
+                grid.style.display = 'none';
+                if (esFiltrado) {
+                    // Mostrar alert solo cuando es resultado de una búsqueda/filtro
+                    alert('No se encontraron estudiantes con los criterios de búsqueda.');
+                }
+                return;
+            }
+
+            grid.style.display = 'grid';
+            grid.innerHTML = '';
+
+            estudiantes.forEach(est => {
+                const card = crearTarjetaEstudianteObservador(est);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('observadorTitleCount').textContent = `Estudiantes encontrados (${estudiantes.length})`;
+        }
+
+        function crearTarjetaEstudianteObservador(estudiante) {
+            const div = document.createElement('div');
+            div.style.cssText = 'background: white; border-radius: 12px; padding: 20px; border: 1px solid #e0e0e0; transition: all 0.3s ease; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);';
+
+            const nombreCompleto = estudiante.usuario?.nombreCompleto || 'Sin nombre';
+            const iniciales = obtenerInicialesObservador(nombreCompleto);
+            const grupo = estudiante.nombreGrupo || obtenerNombreGrupoObservador(estudiante.idGrupo);
+
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #26c6da 0%, #00acc1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; box-shadow: 0 2px 6px rgba(38, 198, 218, 0.3);">
+                        ${iniciales}
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="color: #37474f; font-size: 16px; margin-bottom: 4px; font-weight: 600;">${nombreCompleto}</h4>
+                        <p style="color: #78909c; font-size: 13px; margin: 2px 0;">ID: ${estudiante.idEstudiante} • ${grupo}</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="abrirPanelAgregarAnotacion(${estudiante.idEstudiante})"
+                            style="padding: 8px 14px; background: linear-gradient(135deg, #26c6da 0%, #00acc1 100%); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(38, 198, 218, 0.3); white-space: nowrap;"
+                            title="Agregar anotación">
+                        📝
+                    </button>
+                    <button onclick="abrirModalVerAnotaciones(${estudiante.idEstudiante})"
+                            style="padding: 8px 14px; background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3); white-space: nowrap;"
+                            title="Ver anotaciones">
+                        👁️
+                    </button>
+                </div>
+            `;
+
+            div.onmouseenter = function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)';
+            };
+            div.onmouseleave = function() {
+                this.style.transform = '';
+                this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+            };
+
+            return div;
+        }
+
+        function obtenerInicialesObservador(texto) {
+            if (!texto) return 'E';
+            const palabras = texto.split(/[@\s.]+/);
+            if (palabras.length >= 2) {
+                return (palabras[0][0] + palabras[1][0]).toUpperCase();
+            }
+            return texto.substring(0, 2).toUpperCase();
+        }
+
+        function obtenerNombreGrupoObservador(idGrupo) {
+            if (!idGrupo) return 'Sin grupo';
+            const grupo = todosLosGruposObservador.find(g => g.idGrupo === idGrupo);
+            return grupo ? grupo.nombre : 'Grupo ' + idGrupo;
+        }
+
+        document.getElementById('searchStudentInput')?.addEventListener('input', filtrarEstudiantesObservador);
+        document.getElementById('filterByGroupObservador')?.addEventListener('change', function() {
+            const select = document.getElementById('groupSelectObservador');
+            select.disabled = !this.checked;
+            if (!this.checked) select.value = '';
+            filtrarEstudiantesObservador();
+        });
+        document.getElementById('groupSelectObservador')?.addEventListener('change', filtrarEstudiantesObservador);
+
+        function filtrarEstudiantesObservador() {
+            const query = document.getElementById('searchStudentInput')?.value.toLowerCase().trim() || '';
+            const filterByGroup = document.getElementById('filterByGroupObservador')?.checked;
+            const selectedGrupoId = document.getElementById('groupSelectObservador')?.value;
+            const idGrupo = filterByGroup && selectedGrupoId ? parseInt(selectedGrupoId) : null;
+
+            let filtrados = todosLosEstudiantesObservador;
+
+            // Filtrar por búsqueda de texto (nombre o ID)
+            if (query) {
+                filtrados = filtrados.filter(e => {
+                    const idStr = String(e.idEstudiante);
+                    const nombreCompleto = (e.usuario?.nombreCompleto || '').toLowerCase();
+                    const correo = (e.usuario?.correo || '').toLowerCase();
+                    return idStr.includes(query) || nombreCompleto.includes(query) || correo.includes(query);
+                });
+            }
+
+            // Filtrar por grupo
+            if (idGrupo && !isNaN(idGrupo)) {
+                filtrados = filtrados.filter(e => e.idGrupo === idGrupo);
+            }
+
+            // Indicar que es un resultado de filtrado si hay búsqueda o filtro activo
+            const esFiltrado = query || (filterByGroup && idGrupo);
+            mostrarEstudiantesObservador(filtrados, esFiltrado);
+        }
+
+        function abrirPanelAgregarAnotacion(idEstudiante) {
+            estudianteSeleccionadoObservador = todosLosEstudiantesObservador.find(e => e.idEstudiante === idEstudiante);
+
+            if (!estudianteSeleccionadoObservador) {
+                alert('Estudiante no encontrado. Por favor, recarga la página.');
+                return;
+            }
+
+            let panel = document.getElementById('observadorPanelLateral');
+            if (!panel) {
+                panel = crearPanelLateralObservador();
+                document.body.appendChild(panel);
+            }
+
+            cargarInfoPanelObservador(estudianteSeleccionadoObservador);
+
+            setTimeout(() => {
+                panel.classList.add('active');
+                const overlay = document.getElementById('observadorPanelOverlay');
+                if (overlay) {
+                    overlay.classList.add('active');
+                }
+            }, 10);
+        }
+
+        function crearPanelLateralObservador() {
+            const overlay = document.createElement('div');
+            overlay.id = 'observadorPanelOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 999;';
+            overlay.onclick = cerrarPanelObservador;
+            document.body.appendChild(overlay);
+
+            const panel = document.createElement('div');
+            panel.id = 'observadorPanelLateral';
+            panel.style.cssText = 'position: fixed; right: -450px; top: 0; width: 450px; height: 100vh; background: white; box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; overflow-y: auto;';
+
+            panel.innerHTML = `
+                <div style="background: linear-gradient(135deg, #26c6da 0%, #00acc1 100%); color: white; padding: 25px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h3 style="font-size: 22px; margin-bottom: 5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                                <span>👁️</span>
+                                <span>Observador del Estudiante</span>
+                            </h3>
+                            <p style="font-size: 13px; opacity: 0.9;">Agregar anotación al observador</p>
+                        </div>
+                        <button onclick="cerrarPanelObservador()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">✕</button>
+                    </div>
+                </div>
+                <div style="padding: 25px;">
+                    <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+                        <div style="margin-bottom: 15px;">
+                            <h4 id="panelEstudianteNombre" style="font-size: 18px; color: #37474f; margin-bottom: 8px; font-weight: 600;">Nombre del Estudiante</h4>
+                            <p id="panelEstudianteEmail" style="font-size: 14px; color: #78909c; margin: 0;">correo@estudiante.com</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                            <div>
+                                <p style="font-size: 12px; color: #90a4ae; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">ID Estudiante</p>
+                                <p id="panelEstudianteId" style="font-size: 15px; color: #37474f; font-weight: 600; margin: 0;">-</p>
+                            </div>
+                            <div>
+                                <p style="font-size: 12px; color: #90a4ae; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Grupo</p>
+                                <p id="panelEstudianteGrupo" style="font-size: 15px; color: #37474f; font-weight: 600; margin: 0;">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; border: 1px solid #e0e0e0;">
+                        <h4 style="color: #37474f; font-size: 16px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 20px;">📝</span>
+                            <span>Nueva Anotación</span>
+                        </h4>
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: block; color: #546e7a; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Tipo de Anotación *</label>
+                            <select id="tipoAnotacionObservador" style="width: 100%; padding: 10px 12px; border: 1px solid #d0d0d0; border-radius: 8px; font-size: 14px; color: #37474f; background: white; cursor: pointer; transition: all 0.3s ease;" onfocus="this.style.borderColor='#26c6da'" onblur="this.style.borderColor='#d0d0d0'">
+                                <option value="">Selecciona un tipo...</option>
+                                <option value="Nota de seguimiento">Nota de seguimiento</option>
+                                <option value="Recomendación">Recomendación</option>
+                                <option value="Observación">Observación</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: block; color: #546e7a; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Descripción *</label>
+                            <textarea id="descripcionAnotacionObservador" placeholder="Escribe aquí la anotación..." style="width: 100%; padding: 10px 12px; border: 1px solid #d0d0d0; border-radius: 8px; font-size: 14px; color: #37474f; background: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; resize: vertical; min-height: 110px; transition: all 0.3s ease;" onfocus="this.style.borderColor='#26c6da'" onblur="this.style.borderColor='#d0d0d0'"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button onclick="confirmarAnotacionObservador()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #26c6da 0%, #00acc1 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(38, 198, 218, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(38, 198, 218, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 6px rgba(38, 198, 218, 0.3)'">✓ Confirmar</button>
+                            <button onclick="cerrarPanelObservador()" style="flex: 1; padding: 12px; background: white; color: #78909c; border: 1px solid #d0d0d0; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#26c6da'; this.style.color='#26c6da'" onmouseout="this.style.borderColor='#d0d0d0'; this.style.color='#78909c'">✕ Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return panel;
+        }
+
+        function cargarInfoPanelObservador(estudiante) {
+            const nombreCompleto = estudiante.usuario?.nombreCompleto || 'Sin nombre';
+            const grupo = estudiante.nombreGrupo || obtenerNombreGrupoObservador(estudiante.idGrupo);
+            const correo = estudiante.usuario?.correo || 'Sin correo';
+
+            document.getElementById('panelEstudianteNombre').textContent = nombreCompleto;
+            document.getElementById('panelEstudianteEmail').textContent = correo;
+            document.getElementById('panelEstudianteId').textContent = estudiante.idEstudiante;
+            document.getElementById('panelEstudianteGrupo').textContent = grupo;
+
+            document.getElementById('tipoAnotacionObservador').value = '';
+            document.getElementById('descripcionAnotacionObservador').value = '';
+        }
+
+        function cerrarPanelObservador() {
+            const panel = document.getElementById('observadorPanelLateral');
+            const overlay = document.getElementById('observadorPanelOverlay');
+
+            if (panel) panel.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+
+            document.getElementById('tipoAnotacionObservador').value = '';
+            document.getElementById('descripcionAnotacionObservador').value = '';
+            estudianteSeleccionadoObservador = null;
+        }
+
+        async function confirmarAnotacionObservador() {
+            const tipo = document.getElementById('tipoAnotacionObservador').value;
+            const descripcion = document.getElementById('descripcionAnotacionObservador').value.trim();
+
+            if (!tipo) {
+                alert('Por favor selecciona un tipo de anotación');
+                return;
+            }
+
+            if (!descripcion) {
+                alert('Por favor ingresa una descripción');
+                return;
+            }
+
+            if (!estudianteSeleccionadoObservador) {
+                alert('Error: No hay estudiante seleccionado');
+                return;
+            }
+
+            try {
+                // Guardar la anotación en la base de datos
+                const formData = new FormData();
+                formData.append('idEstudiante', estudianteSeleccionadoObservador.idEstudiante);
+                formData.append('tipo', tipo);
+                formData.append('descripcion', descripcion);
+
+                const response = await fetch('/directivo/api/observador/guardar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Anotación guardada exitosamente');
+                    cerrarPanelObservador();
+                } else {
+                    alert('❌ Error: ' + (data.message || 'No se pudo guardar la anotación'));
+                }
+            } catch (error) {
+                console.error('Error al guardar anotación:', error);
+                alert('❌ Error al guardar la anotación. Por favor, intenta de nuevo.');
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('observadorPanelLateral')?.classList.contains('active')) {
+                cerrarPanelObservador();
+            }
+            if (e.key === 'Escape' && document.getElementById('modalVerAnotaciones')?.classList.contains('active')) {
+                cerrarModalVerAnotaciones();
+            }
+        });
+
+        // ========================================
+        // MÓDULO DE VER ANOTACIONES
+        // ========================================
+
+        async function abrirModalVerAnotaciones(idEstudiante) {
+            const estudiante = todosLosEstudiantesObservador.find(e => e.idEstudiante === idEstudiante);
+
+            if (!estudiante) {
+                alert('Estudiante no encontrado. Por favor, recarga la página.');
+                return;
+            }
+
+            // Crear modal si no existe
+            let modal = document.getElementById('modalVerAnotaciones');
+            if (!modal) {
+                modal = crearModalVerAnotaciones();
+                document.body.appendChild(modal);
+            }
+
+            // Mostrar loading
+            const modalContent = document.getElementById('modalAnotacionesContent');
+            modalContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div style="border: 4px solid #e0f2f1; border-top: 4px solid #26c6da; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div><p>Cargando anotaciones...</p></div>';
+
+            // Cargar información del estudiante
+            const nombreCompleto = estudiante.usuario?.nombreCompleto || 'Sin nombre';
+            document.getElementById('modalAnotacionesEstudiante').textContent = nombreCompleto;
+
+            // Mostrar modal
+            modal.classList.add('active');
+            document.getElementById('modalVerAnotacionesOverlay').classList.add('active');
+
+            // Cargar anotaciones del servidor
+            try {
+                const response = await fetch(`/directivo/api/observador/${idEstudiante}`);
+                const data = await response.json();
+
+                if (data.success && data.anotaciones && data.anotaciones.length > 0) {
+                    mostrarAnotaciones(data.anotaciones);
+                } else {
+                    modalContent.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; color: #90a4ae;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">📝</div>
+                            <p style="font-size: 18px; margin-bottom: 10px;">No hay anotaciones registradas</p>
+                            <small>Este estudiante aún no tiene anotaciones en su observador</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error al cargar anotaciones:', error);
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #ef5350;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
+                        <p style="font-size: 18px; margin-bottom: 10px;">Error al cargar anotaciones</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        function crearModalVerAnotaciones() {
+            const overlay = document.createElement('div');
+            overlay.id = 'modalVerAnotacionesOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 999; display: flex; align-items: center; justify-content: center;';
+            overlay.onclick = cerrarModalVerAnotaciones;
+            document.body.appendChild(overlay);
+
+            const modal = document.createElement('div');
+            modal.id = 'modalVerAnotaciones';
+            modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); width: 90%; max-width: 900px; max-height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); opacity: 0; visibility: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; overflow: hidden; display: flex; flex-direction: column;';
+
+            modal.innerHTML = `
+                <div style="background: linear-gradient(135deg, #26c6da 0%, #00acc1 100%); color: white; padding: 25px 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 28px;">👁️</span>
+                                <span>Anotaciones del Observador</span>
+                            </h2>
+                            <p id="modalAnotacionesEstudiante" style="margin: 0; font-size: 15px; opacity: 0.95;">Estudiante</p>
+                        </div>
+                        <button onclick="cerrarModalVerAnotaciones()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">✕</button>
+                    </div>
+                </div>
+                <div id="modalAnotacionesContent" style="flex: 1; overflow-y: auto; padding: 25px 30px;">
+                    <!-- Las anotaciones se cargarán aquí -->
+                </div>
+            `;
+
+            // Prevenir que el clic en el modal cierre el overlay
+            modal.onclick = function(e) {
+                e.stopPropagation();
+            };
+
+            return modal;
+        }
+
+        function mostrarAnotaciones(anotaciones) {
+            const content = document.getElementById('modalAnotacionesContent');
+
+            if (!anotaciones || anotaciones.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: #90a4ae; padding: 40px;">No hay anotaciones para este estudiante</p>';
+                return;
+            }
+
+            let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
+
+            anotaciones.forEach((anotacion, index) => {
+                // Parsear la fecha correctamente desde el formato YYYY-MM-DD
+                const fechaParts = anotacion.fecha.split('-');
+                const fecha = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2]);
+
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Colores según el tipo
+                let colorBorde = '#26c6da';
+                let colorFondo = '#e0f7fa';
+                let icono = '📝';
+
+                if (anotacion.tipo === 'Recomendación') {
+                    colorBorde = '#66bb6a';
+                    colorFondo = '#e8f5e9';
+                    icono = '💡';
+                } else if (anotacion.tipo === 'Observación') {
+                    colorBorde = '#ffa726';
+                    colorFondo = '#fff3e0';
+                    icono = '👀';
+                }
+
+                html += `
+                    <div style="background: ${colorFondo}; border-left: 4px solid ${colorBorde}; border-radius: 8px; padding: 20px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.1)'" onmouseout="this.style.boxShadow=''">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 24px;">${icono}</span>
+                                <div>
+                                    <h4 style="margin: 0; color: #37474f; font-size: 16px; font-weight: 600;">${anotacion.tipo}</h4>
+                                    <p style="margin: 4px 0 0 0; color: #78909c; font-size: 13px;">${fechaFormateada}</p>
+                                </div>
+                            </div>
+                            <span style="background: ${colorBorde}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">#${anotacion.idAnotacion}</span>
+                        </div>
+                        <p style="margin: 0; color: #546e7a; font-size: 15px; line-height: 1.6;">${anotacion.descripcion}</p>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function cerrarModalVerAnotaciones() {
+            const modal = document.getElementById('modalVerAnotaciones');
+            const overlay = document.getElementById('modalVerAnotacionesOverlay');
+
+            if (modal) modal.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        const styleObservador = document.createElement('style');
+        styleObservador.textContent = `
+            #observadorPanelLateral.active { right: 0 !important; }
+            #observadorPanelOverlay.active { opacity: 1 !important; visibility: visible !important; }
+            #modalVerAnotaciones.active {
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: translate(-50%, -50%) scale(1) !important;
+            }
+            #modalVerAnotacionesOverlay.active { opacity: 1 !important; visibility: visible !important; }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(styleObservador);
+
     </script>
 </body>
 </html>

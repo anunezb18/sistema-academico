@@ -1,6 +1,7 @@
 package com.udistrital.awuis.sistema_academico.repositories;
 
 import com.udistrital.awuis.sistema_academico.model.Observador;
+import com.udistrital.awuis.sistema_academico.model.Anotacion;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -50,6 +51,22 @@ public class ObservadorMapper {
     public Optional<Observador> findById(int id) {
         Observador observador = em.find(Observador.class, id);
         return Optional.ofNullable(observador);
+    }
+
+    /**
+     * Busca un observador por ID de estudiante
+     * @param idEstudiante El ID del estudiante
+     * @return Optional con el observador si existe
+     */
+    public Optional<Observador> findByIdEstudiante(int idEstudiante) {
+        try {
+            TypedQuery<Observador> query = em.createQuery(
+                "SELECT o FROM Observador o WHERE o.idEstudiante = :idEstudiante", Observador.class);
+            query.setParameter("idEstudiante", idEstudiante);
+            return Optional.ofNullable(query.getSingleResult());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -106,5 +123,38 @@ public class ObservadorMapper {
             "SELECT COUNT(o) FROM Observador o", Long.class)
             .getSingleResult();
     }
-}
 
+    /**
+     * Inserta un nuevo observador
+     * @param observador El observador a insertar
+     * @return El observador insertado
+     */
+    public Observador insertar(Observador observador) {
+        return save(observador);
+    }
+
+    /**
+     * Inserta una nueva anotación
+     * @param anotacion La anotación a insertar
+     */
+    public void insertarAnotacion(Anotacion anotacion) {
+        if (anotacion == null) {
+            throw new IllegalArgumentException("La anotación no puede ser null");
+        }
+        em.persist(anotacion);
+        em.flush();
+    }
+
+    /**
+     * Obtiene todas las anotaciones de un observador
+     * @param idObservador El ID del observador
+     * @return Lista de anotaciones
+     */
+    public List<Anotacion> obtenerAnotacionesPorObservador(int idObservador) {
+        TypedQuery<Anotacion> query = em.createQuery(
+            "SELECT a FROM Anotacion a WHERE a.idObservador = :idObservador ORDER BY a.fecha DESC",
+            Anotacion.class);
+        query.setParameter("idObservador", idObservador);
+        return query.getResultList();
+    }
+}

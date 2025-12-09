@@ -541,7 +541,6 @@ public class DirectivoController {
                 .map(estudiante -> {
                     java.util.Map<String, Object> map = new java.util.HashMap<>();
                     map.put("idEstudiante", estudiante.getIdEstudiante());
-                    map.put("correo", estudiante.getCorreo());
 
                     // Obtener nombre del grupo
                     if (estudiante.getIdGrupo() != null) {
@@ -564,20 +563,24 @@ public class DirectivoController {
                         map.put("grupoNombre", "Sin Grupo");
                     }
 
-                    // Obtener nombre del estudiante desde el formulario
+                    // Obtener nombre y correo del estudiante desde el formulario
                     if (estudiante.getIdFormulario() != null) {
                         try {
                             Formulario formulario = formularioMapper.obtenerPorId(estudiante.getIdFormulario());
                             if (formulario != null) {
                                 map.put("nombre", formulario.getNombreCompleto());
+                                map.put("correo", formulario.getCorreoResponsable());
                             } else {
                                 map.put("nombre", "Sin nombre");
+                                map.put("correo", "Sin correo");
                             }
                         } catch (Exception e) {
                             map.put("nombre", "Sin nombre");
+                            map.put("correo", "Sin correo");
                         }
                     } else {
                         map.put("nombre", "Sin nombre");
+                        map.put("correo", "Sin correo");
                     }
 
                     return map;
@@ -606,7 +609,6 @@ public class DirectivoController {
             }
 
             response.put("idEstudiante", estudiante.getIdEstudiante());
-            response.put("correo", estudiante.getCorreo());
             response.put("fechaIngreso", estudiante.getFechaIngreso() != null ?
                 estudiante.getFechaIngreso().toString() : "No registrada");
 
@@ -671,5 +673,293 @@ public class DirectivoController {
 
         return response;
     }
-}
 
+    /**
+     * API REST: Obtener todos los estudiantes con información de usuario
+     */
+    @GetMapping("/directivo/api/estudiantes")
+    @ResponseBody
+    public List<java.util.Map<String, Object>> obtenerEstudiantes(@SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+        System.out.println("=== INICIO obtenerEstudiantes DIRECTIVO ===");
+
+        if (usuario == null) {
+            System.out.println("Usuario es null - retornando lista vacía");
+            return new java.util.ArrayList<>();
+        }
+
+        try {
+            System.out.println("Llamando a estudianteMapper.listarEstudiantes()...");
+            List<Estudiante> estudiantes = estudianteMapper.listarEstudiantes();
+            System.out.println("✓ Estudiantes obtenidos: " + estudiantes.size());
+
+            List<java.util.Map<String, Object>> resultado = new java.util.ArrayList<>();
+
+            int contador = 0;
+            for (Estudiante est : estudiantes) {
+                contador++;
+                try {
+                    System.out.println("  Procesando estudiante " + contador + "/" + estudiantes.size() + " - ID: " + est.getIdEstudiante());
+
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idEstudiante", est.getIdEstudiante());
+                    map.put("idUsuario", est.getIdUsuario());
+                    map.put("idGrupo", est.getIdGrupo());
+                    map.put("idHistorialAcademico", est.getIdHistorialAcademico());
+                    map.put("fechaIngreso", est.getFechaIngreso());
+
+                    // Crear objeto usuario con correo y nombre
+                    java.util.Map<String, Object> usuarioMap = new java.util.HashMap<>();
+
+                    // Obtener información del formulario
+                    String correo = "Sin correo";
+                    String nombreCompleto = "Sin nombre";
+                    if (est.getIdFormulario() != null) {
+                        System.out.println("    Obteniendo formulario con ID: " + est.getIdFormulario());
+                        try {
+                            Formulario formulario = formularioMapper.obtenerPorId(est.getIdFormulario());
+                            if (formulario != null) {
+                                if (formulario.getCorreoResponsable() != null) {
+                                    correo = formulario.getCorreoResponsable();
+                                    System.out.println("    ✓ Correo obtenido: " + correo);
+                                }
+                                if (formulario.getNombreCompleto() != null) {
+                                    nombreCompleto = formulario.getNombreCompleto();
+                                    System.out.println("    ✓ Nombre obtenido: " + nombreCompleto);
+                                }
+                            } else {
+                                System.out.println("    ⚠ Formulario null");
+                            }
+                        } catch (Exception e) {
+                            System.err.println("    ✗ Error al obtener formulario para estudiante " + est.getIdEstudiante() + ": " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.out.println("    ⚠ Estudiante sin idFormulario");
+                    }
+
+                    usuarioMap.put("idUsuario", est.getIdUsuario());
+                    usuarioMap.put("correo", correo);
+                    usuarioMap.put("nombreCompleto", nombreCompleto);
+                    map.put("usuario", usuarioMap);
+
+                    // Obtener nombre del grado para el grupo
+                    if (est.getIdGrupo() != null) {
+                        try {
+                            var grupo = grupoMapper.findById(est.getIdGrupo()).orElse(null);
+                            if (grupo != null) {
+                                var grado = gradoMapper.findById(grupo.getIdGrado()).orElse(null);
+                                if (grado != null) {
+                                    map.put("nombreGrado", grado.getNombre());
+                                    map.put("nombreGrupo", grado.getNombre() + " " + grupo.getNombre());
+                                    System.out.println("    ✓ Grupo obtenido: " + grado.getNombre() + " " + grupo.getNombre());
+                                } else {
+                                    map.put("nombreGrupo", grupo.getNombre());
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.err.println("    ✗ Error al obtener grupo: " + e.getMessage());
+                        }
+                    }
+
+                    resultado.add(map);
+                    System.out.println("    ✓ Estudiante procesado correctamente");
+
+                } catch (Exception e) {
+                    System.err.println("  ✗ ERROR al procesar estudiante " + est.getIdEstudiante() + ":");
+                    System.err.println("     Mensaje: " + e.getMessage());
+                    System.err.println("     Tipo: " + e.getClass().getName());
+                    e.printStackTrace();
+                }
+            }
+
+            System.out.println("=== FIN - Resultado final: " + resultado.size() + " estudiantes procesados de " + estudiantes.size() + " totales ===");
+            return resultado;
+
+        } catch (Exception e) {
+            System.err.println("✗✗✗ ERROR CRÍTICO al obtener estudiantes:");
+            System.err.println("   Mensaje: " + e.getMessage());
+            System.err.println("   Tipo: " + e.getClass().getName());
+            System.err.println("   Stack trace:");
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * API REST: Obtener todos los grupos
+     */
+    @GetMapping("/directivo/api/grupos")
+    @ResponseBody
+    public List<java.util.Map<String, Object>> obtenerGrupos(
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+        if (usuario == null) {
+            return new java.util.ArrayList<>();
+        }
+
+        try {
+            return grupoMapper.findAll().stream()
+                .map(grupo -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idGrupo", grupo.getIdGrupo());
+                    map.put("idGrado", grupo.getIdGrado());
+                    map.put("idProfesor", grupo.getIdProfesor());
+
+                    // Obtener nombre completo con grado
+                    String nombreCompleto = grupo.getNombre();
+                    try {
+                        var grado = gradoMapper.findById(grupo.getIdGrado()).orElse(null);
+                        if (grado != null) {
+                            nombreCompleto = grado.getNombre() + " " + grupo.getNombre();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error al obtener grado: " + e.getMessage());
+                    }
+
+                    map.put("nombre", nombreCompleto);
+                    return map;
+                })
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error al obtener grupos: " + e.getMessage());
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * API REST: Guardar nueva anotación en el observador
+     */
+    @PostMapping("/directivo/api/observador/guardar")
+    @ResponseBody
+    public java.util.Map<String, Object> guardarAnotacionObservador(
+            @RequestParam int idEstudiante,
+            @RequestParam String tipo,
+            @RequestParam String descripcion,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Obtener el estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            // Obtener el observador desde el historial académico
+            Integer idObservador = null;
+            if (estudiante.getIdHistorialAcademico() != null) {
+                HistorialAcademico historial = historialAcademicoMapper.findById(estudiante.getIdHistorialAcademico()).orElse(null);
+                if (historial != null) {
+                    idObservador = historial.getIdObservador();
+                }
+            }
+
+            if (idObservador == null) {
+                response.put("success", false);
+                response.put("message", "No se encontró el observador del estudiante");
+                return response;
+            }
+
+            // Crear la anotación
+            com.udistrital.awuis.sistema_academico.model.Anotacion anotacion =
+                new com.udistrital.awuis.sistema_academico.model.Anotacion();
+            anotacion.setIdObservador(idObservador);
+            anotacion.setTipo(tipo);
+            anotacion.setDescripcion(descripcion);
+            anotacion.setFecha(java.time.LocalDate.now());
+
+            // Guardar la anotación
+            observadorMapper.insertarAnotacion(anotacion);
+
+            response.put("success", true);
+            response.put("message", "Anotación guardada exitosamente");
+
+        } catch (Exception e) {
+            System.err.println("Error al guardar anotación: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al guardar la anotación: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener anotaciones del observador de un estudiante
+     */
+    @GetMapping("/directivo/api/observador/{idEstudiante}")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerAnotacionesObservador(
+            @PathVariable int idEstudiante,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Obtener el estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            // Obtener el observador desde el historial académico
+            Integer idObservador = null;
+            if (estudiante.getIdHistorialAcademico() != null) {
+                HistorialAcademico historial = historialAcademicoMapper.findById(estudiante.getIdHistorialAcademico()).orElse(null);
+                if (historial != null) {
+                    idObservador = historial.getIdObservador();
+                }
+            }
+
+            if (idObservador == null) {
+                response.put("success", true);
+                response.put("anotaciones", new java.util.ArrayList<>());
+                response.put("message", "No hay anotaciones para este estudiante");
+                return response;
+            }
+
+            // Obtener las anotaciones
+            List<com.udistrital.awuis.sistema_academico.model.Anotacion> anotaciones =
+                observadorMapper.obtenerAnotacionesPorObservador(idObservador);
+
+            List<java.util.Map<String, Object>> anotacionesData = anotaciones.stream()
+                .map(a -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idAnotacion", a.getIdAnotacion());
+                    map.put("tipo", a.getTipo());
+                    map.put("descripcion", a.getDescripcion());
+                    map.put("fecha", a.getFecha().toString());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("anotaciones", anotacionesData);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener anotaciones: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener anotaciones: " + e.getMessage());
+        }
+
+        return response;
+    }
+}
