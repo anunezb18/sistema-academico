@@ -3,18 +3,18 @@ package com.udistrital.awuis.sistema_academico.model;
 import jakarta.persistence.*;
 
 /**
- * Entidad Directivo.
+ * Entidad Profesor.
  * COMPOSICIÓN: Tiene una referencia a Usuario en lugar de heredar.
  * Ver justificación en clase Estudiante.
  */
 @Entity
-@Table(name = "\"Directivo\"")
-public class Directivo {
+@Table(name = "\"Profesor\"")
+public class Profesor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "\"idDirectivo\"")
-    private int idDirectivo;
+    @Column(name = "\"idProfesor\"")
+    private int idProfesor;
 
     @Column(name = "\"idUsuario\"")
     private Integer idUsuario;
@@ -26,15 +26,15 @@ public class Directivo {
     @JoinColumn(name = "\"idUsuario\"", insertable = false, updatable = false)
     private Usuario usuario;
 
-    public Directivo() {
+    public Profesor() {
     }
 
-    public int getIdDirectivo() {
-        return idDirectivo;
+    public int getIdProfesor() {
+        return idProfesor;
     }
 
-    public void setIdDirectivo(int idDirectivo) {
-        this.idDirectivo = idDirectivo;
+    public void setIdProfesor(int idProfesor) {
+        this.idProfesor = idProfesor;
     }
 
     public Integer getIdUsuario() {
@@ -76,15 +76,13 @@ public class Directivo {
 
     @Override
     public String toString() {
-        return "Directivo{" +
-                "idDirectivo=" + idDirectivo +
+        return "Profesor{" +
+                "idProfesor=" + idProfesor +
                 ", idUsuario=" + idUsuario +
                 ", correo='" + getCorreo() + '\'' +
                 '}';
     }
 }
-
-
 
 
 

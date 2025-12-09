@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional
@@ -45,6 +46,24 @@ public class EstudianteMapper {
         query.setParameter("idFormulario", idFormulario);
         List<Estudiante> resultados = query.getResultList();
         return resultados.isEmpty() ? null : resultados.get(0);
+    }
+
+    /**
+     * Busca un estudiante por su idUsuario
+     * @param idUsuario El ID del usuario asociado
+     * @return Optional con el estudiante si existe
+     */
+    public Optional<Estudiante> findByIdUsuario(int idUsuario) {
+        try {
+            TypedQuery<Estudiante> query = em.createQuery(
+                "SELECT e FROM Estudiante e WHERE e.idUsuario = :idUsuario",
+                Estudiante.class);
+            query.setParameter("idUsuario", idUsuario);
+            Estudiante estudiante = query.getSingleResult();
+            return Optional.of(estudiante);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     public Estudiante actualizarEstudiante(Estudiante estudiante) {

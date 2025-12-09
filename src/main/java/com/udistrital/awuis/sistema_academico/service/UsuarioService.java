@@ -1,8 +1,12 @@
 package com.udistrital.awuis.sistema_academico.service;
 
+import com.udistrital.awuis.sistema_academico.model.Directivo;
+import com.udistrital.awuis.sistema_academico.model.Profesor;
 import com.udistrital.awuis.sistema_academico.model.Rol;
 import com.udistrital.awuis.sistema_academico.model.TokenUsuario;
 import com.udistrital.awuis.sistema_academico.model.Usuario;
+import com.udistrital.awuis.sistema_academico.repositories.DirectivoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.ProfesorMapper;
 import com.udistrital.awuis.sistema_academico.repositories.RolMapper;
 import com.udistrital.awuis.sistema_academico.repositories.TokenUsuarioMapper;
 import com.udistrital.awuis.sistema_academico.repositories.UsuarioMapper;
@@ -26,13 +30,23 @@ public class UsuarioService {
     private RolMapper rolMapper;
 
     @Autowired
+    private ProfesorMapper profesorMapper;
+
+    @Autowired
+    private DirectivoMapper directivoMapper;
+
+    @Autowired
     private EmailService emailService;
 
     /**
-     * Crea un nuevo usuario con rol específico
+     * Crea un nuevo usuario con rol específico.
+     * Usa COMPOSICIÓN: Primero crea Usuario, luego crea Profesor/Directivo con referencia al Usuario.
      */
     @Transactional
-    public Usuario crearUsuario(String correo, String contrasena, int idRol) {
+    public Usuario crearUsuario(String correo, String contrasena, int idRol, String nombre) {
+        System.out.println("=== Iniciando creación de usuario ===");
+        System.out.println("Correo: " + correo + ", Rol: " + idRol + ", Nombre: " + nombre);
+
         // Verificar si el correo ya existe
         if (usuarioMapper.findByCorreo(correo).isPresent()) {
             throw new IllegalArgumentException("El correo ya está registrado");
@@ -48,16 +62,56 @@ public class UsuarioService {
         token.setExpiracion(LocalDateTime.now().plusHours(24)); // Token válido por 24 horas
         token.setRol(rol); // Asignar el rol al token
         token = tokenUsuarioMapper.save(token); // Guardar y obtener con ID generado
+        System.out.println("Token creado con ID: " + token.getIdToken());
 
-        // Crear usuario
-        Usuario usuario = new Usuario();
+        Usuario usuario;
+
+        // Primero crear usuario base
+        usuario = new Usuario();
         usuario.setCorreo(correo);
-        usuario.setContrasena(contrasena); // TODO: Encriptar contraseña
+        usuario.setContrasena(contrasena);
         usuario.setToken(token);
-
-        // Guardar usuario
         usuario = usuarioMapper.save(usuario);
+        System.out.println("Usuario base creado con ID: " + usuario.getIdUsuario());
 
+        // Crear entidad específica según el rol (COMPOSICIÓN)
+        try {
+            switch (idRol) {
+                case 1: // Directivo (idRol en BD)
+                case 3: // Directivo (alternativo)
+                    System.out.println("Creando Directivo (COMPOSICIÓN con Usuario)...");
+                    Directivo directivo = new Directivo();
+                    directivo.setIdUsuario(usuario.getIdUsuario());
+                    directivo.setNombre(nombre);
+                    directivo = directivoMapper.save(directivo);
+                    System.out.println("Directivo creado - idDirectivo: " + directivo.getIdDirectivo() + ", idUsuario: " + directivo.getIdUsuario());
+                    break;
+
+                case 2: // Profesor
+                    System.out.println("Creando Profesor (COMPOSICIÓN con Usuario)...");
+                    Profesor profesor = new Profesor();
+                    profesor.setIdUsuario(usuario.getIdUsuario());
+                    profesor.setNombre(nombre);
+                    profesor = profesorMapper.save(profesor);
+                    System.out.println("Profesor creado - idProfesor: " + profesor.getIdProfesor() + ", idUsuario: " + profesor.getIdUsuario());
+                    break;
+
+
+                case 4: // Estudiante (se crea cuando se acepta un aspirante)
+                    System.out.println("Usuario genérico - Estudiante se creará desde aspirante");
+                    break;
+
+                default: // Otros roles (admin, etc.)
+                    System.out.println("Usuario genérico creado");
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("Error al crear usuario: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al crear " + rol.getNombre() + ": " + e.getMessage(), e);
+        }
+
+        System.out.println("=== Usuario creado exitosamente ===");
         return usuario;
     }
 
@@ -69,8 +123,8 @@ public class UsuarioService {
         // Generar contraseña temporal aleatoria
         String contrasenaTemporal = generarContrasenaTemporal();
 
-        // Crear usuario con rol de Estudiante (idRol = 4)
-        Usuario usuario = crearUsuario(correo, contrasenaTemporal, 4);
+        // Crear usuario con rol de Estudiante (idRol = 4) - no requiere nombre adicional
+        Usuario usuario = crearUsuario(correo, contrasenaTemporal, 4, nombreCompleto);
 
         // Enviar correo con credenciales
         try {

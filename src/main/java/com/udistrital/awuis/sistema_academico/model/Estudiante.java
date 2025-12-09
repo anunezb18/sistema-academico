@@ -3,6 +3,16 @@ package com.udistrital.awuis.sistema_academico.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad Estudiante.
+ * COMPOSICIÓN: Tiene una referencia a Usuario en lugar de heredar.
+ *
+ * JUSTIFICACIÓN: Aunque en el diagrama de clases mostramos herencia (IS-A),
+ * implementamos composición (HAS-A) porque:
+ * 1. La BD tiene PKs independientes (idEstudiante != idUsuario)
+ * 2. JPA no soporta esta estructura con herencia
+ * 3. Principio "Composition over Inheritance" (Gang of Four)
+ */
 @Entity
 @Table(name = "\"Estudiante\"")
 public class Estudiante {
@@ -14,6 +24,10 @@ public class Estudiante {
 
     @Column(name = "\"idUsuario\"")
     private Integer idUsuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "\"idUsuario\"", insertable = false, updatable = false)
+    private Usuario usuario;
 
     @Column(name = "\"idHistorialAcademico\"")
     private Integer idHistorialAcademico;
@@ -28,10 +42,11 @@ public class Estudiante {
     private Integer idFormulario;
 
     public Estudiante() {
+        super();
     }
 
-    public Estudiante(Integer idUsuario, Integer idHistorialAcademico, LocalDate fechaIngreso, Integer idGrupo, Integer idFormulario) {
-        this.idUsuario = idUsuario;
+    public Estudiante(Integer idHistorialAcademico, LocalDate fechaIngreso, Integer idGrupo, Integer idFormulario) {
+        super();
         this.idHistorialAcademico = idHistorialAcademico;
         this.fechaIngreso = fechaIngreso;
         this.idGrupo = idGrupo;
@@ -52,6 +67,27 @@ public class Estudiante {
 
     public void setIdUsuario(Integer idUsuario) {
         this.idUsuario = idUsuario;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    // Métodos delegados a Usuario (simulan herencia)
+    public String getCorreo() {
+        return usuario != null ? usuario.getCorreo() : null;
+    }
+
+    public String getContrasena() {
+        return usuario != null ? usuario.getContrasena() : null;
+    }
+
+    public TokenUsuario getToken() {
+        return usuario != null ? usuario.getToken() : null;
     }
 
     public Integer getIdHistorialAcademico() {
@@ -91,6 +127,7 @@ public class Estudiante {
         return "Estudiante{" +
                 "idEstudiante=" + idEstudiante +
                 ", idUsuario=" + idUsuario +
+                ", correo='" + getCorreo() + '\'' +
                 ", idHistorialAcademico=" + idHistorialAcademico +
                 ", fechaIngreso=" + fechaIngreso +
                 ", idGrupo=" + idGrupo +

@@ -418,7 +418,11 @@
             </div>
             <div class="user-badge">
                 <div class="user-avatar">👨‍🏫</div>
-                <span th:text="${nombreProfesor}">Profesor García</span>
+                <div>
+                    <span th:text="${nombreProfesor}">Profesor García</span>
+                    <br>
+                    <small th:text="'(' + ${rolProfesor} + ')'" style="font-size: 12px; color: #78909c;">( Profesor )</small>
+                </div>
             </div>
         </div>
 
@@ -717,12 +721,33 @@
         <div id="panel-hoja-vida" class="panel">
             <div class="top-bar">
                 <div class="welcome-text">
-                    <h2>📋 Hoja de Vida</h2>
-                    <p>Información del profesor</p>
+                    <h2>📋 Hoja de Vida Estudiantes</h2>
+                    <p>Consulta la información completa de tus estudiantes</p>
                 </div>
             </div>
-            <div class="card">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Hoja de vida en desarrollo...</p>
+
+            <!-- Barra de búsqueda -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="buscarEstudianteHVProf" placeholder="🔍 Buscar estudiante por nombre o correo..."
+                           style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                           onkeyup="filtrarEstudiantesHVProf()">
+                </div>
+            </div>
+
+            <!-- Lista de estudiantes por grupos -->
+            <div class="card" id="listaEstudiantesHVProf">
+                <div style="text-align: center; padding: 40px; color: #78909c;">
+                    <p>Cargando estudiantes...</p>
+                </div>
+            </div>
+
+            <!-- Modal para ver hoja de vida detallada -->
+            <div id="modalHojaVidaProf" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
+                <div style="background: white; max-width: 900px; margin: 50px auto; border-radius: 12px; padding: 30px; position: relative;">
+                    <button onclick="cerrarModalHojaVidaProf()" style="position: absolute; top: 20px; right: 20px; background: #ef5350; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px;">✕</button>
+                    <div id="contenidoHojaVidaProf"></div>
+                </div>
             </div>
         </div>
 
@@ -765,6 +790,7 @@
                 document.querySelector('.menu-item[onclick*="logros"]').classList.add('active');
             } else if (panelId === 'hoja-vida') {
                 document.querySelector('.menu-item[onclick*="hoja-vida"]').classList.add('active');
+                cargarEstudiantesHojaVidaProf();
             } else if (panelId === 'observador') {
                 document.querySelector('.menu-item[onclick*="observador"]').classList.add('active');
             } else if (panelId === 'enviar-correo') {
@@ -958,7 +984,15 @@
                         console.log('Result:', result);
 
                         if (result.success) {
-                            // Limpiar formulario PRIMERO
+                            // Mostrar mensaje de éxito (y advertencia si existe) ANTES de limpiar
+                            let mensajeAlerta = result.message;
+                            if (result.warning) {
+                                mensajeAlerta += '\n\n⚠️ ' + result.warning;
+                            }
+
+                            alert(mensajeAlerta);
+
+                            // Limpiar formulario DESPUÉS del alert
                             document.getElementById('asuntoInputProfesor').value = '';
                             document.getElementById('mensajeInputProfesor').value = '';
                             document.getElementById('asuntoCounterProfesor').textContent = '0';
@@ -973,14 +1007,6 @@
                             // Actualizar contador
                             actualizarContadorProfesor();
 
-                            // Mostrar mensaje de éxito (y advertencia si existe)
-                            let mensajeAlerta = result.message;
-                            if (result.warning) {
-                                mensajeAlerta += '\n\n⚠️ ' + result.warning;
-                            }
-
-                            alert(mensajeAlerta);
-
                             // Volver al panel principal
                             mostrarPanelProfesor('principal');
                         } else {
@@ -990,7 +1016,10 @@
                     } catch (error) {
                         console.error('Error completo:', error);
                         console.error('Error stack:', error.stack);
-                        alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.\n\nDetalle: ' + error.message);
+                        // Solo mostrar error si no es después de un éxito
+                        if (!error.message.includes('undefined')) {
+                            alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.\n\nDetalle: ' + error.message);
+                        }
                     } finally {
                         // Restaurar botón
                         btnEnviar.disabled = false;
@@ -1001,12 +1030,171 @@
         });
 
         // Cambiar tabs (mantener funcionalidad existente)
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+
+        // ==================== FUNCIONES HOJA DE VIDA PROFESOR ====================
+
+        // Cargar estudiantes del grupo del profesor
+        async function cargarEstudiantesHojaVidaProf() {
+            try {
+                const response = await fetch('/profesor/estudiantes-hoja-vida');
+                const data = await response.json();
+
+                const container = document.getElementById('listaEstudiantesHVProf');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #78909c;"><p>No tienes estudiantes asignados</p></div>';
+                    return;
+                }
+
+                // Agrupar estudiantes por grupo
+                const estudiantesPorGrupo = {};
+                data.forEach(est => {
+                    const grupoNombre = est.grupoNombre || 'Sin Grupo';
+                    if (!estudiantesPorGrupo[grupoNombre]) {
+                        estudiantesPorGrupo[grupoNombre] = [];
+                    }
+                    estudiantesPorGrupo[grupoNombre].push(est);
+                });
+
+                // Renderizar grupos
+                let html = '';
+                for (const [grupoNombre, estudiantes] of Object.entries(estudiantesPorGrupo)) {
+                    html += `
+                        <div class="grupo-container" style="margin-bottom: 30px;">
+                            <h3 style="color: #00838f; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #b2ebf2;">
+                                👥 ${grupoNombre} (${estudiantes.length} estudiante${estudiantes.length !== 1 ? 's' : ''})
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                    `;
+
+                    estudiantes.forEach(est => {
+                        html += `
+                            <div class="estudiante-card" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; display: flex; align-items: center; gap: 15px; transition: all 0.3s;">
+                                <img src="https://via.placeholder.com/60/00acc1/ffffff?text=${est.nombre ? est.nombre.charAt(0).toUpperCase() : 'E'}"
+                                     alt="Foto"
+                                     style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 5px 0; color: #37474f; font-size: 14px;">${est.nombre || 'Sin nombre'}</h4>
+                                    <p style="margin: 0; font-size: 12px; color: #78909c;">${est.correo || 'Sin correo'}</p>
+                                    <button onclick="verHojaVidaCompletaProf(${est.idEstudiante})"
+                                            style="margin-top: 8px; padding: 5px 12px; background: #26c6da; color: white; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                                        Ver Hoja de Vida
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error al cargar estudiantes:', error);
+                document.getElementById('listaEstudiantesHVProf').innerHTML =
+                    '<div style="text-align: center; padding: 40px; color: #ef5350;"><p>Error al cargar estudiantes</p></div>';
+            }
+        }
+
+        // Filtrar estudiantes en tiempo real
+        function filtrarEstudiantesHVProf() {
+            const query = document.getElementById('buscarEstudianteHVProf').value.toLowerCase();
+            const cards = document.querySelectorAll('.estudiante-card');
+
+            cards.forEach(card => {
+                const texto = card.textContent.toLowerCase();
+                if (texto.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
             });
-        });
+        }
+
+        // Ver hoja de vida completa de un estudiante
+        async function verHojaVidaCompletaProf(idEstudiante) {
+            try {
+                const response = await fetch(`/profesor/estudiante-detalle/${idEstudiante}`);
+                const estudiante = await response.json();
+
+                const modal = document.getElementById('modalHojaVidaProf');
+                const contenido = document.getElementById('contenidoHojaVidaProf');
+
+                contenido.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <img src="https://via.placeholder.com/120/00acc1/ffffff?text=${estudiante.nombre ? estudiante.nombre.charAt(0).toUpperCase() : 'E'}"
+                             alt="Foto estudiante"
+                             style="width: 120px; height: 120px; border-radius: 50%; margin-bottom: 15px; border: 4px solid #26c6da;">
+                        <h2 style="margin: 0; color: #00838f;">${estudiante.nombre || 'Sin nombre'}</h2>
+                        <p style="color: #78909c; margin: 5px 0;">Estudiante</p>
+                        <p style="background: #e0f7fa; display: inline-block; padding: 5px 15px; border-radius: 20px; color: #00838f; font-weight: 600; margin-top: 10px;">
+                            ${estudiante.grupoNombre || 'Sin grupo asignado'}
+                        </p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #546e7a;">📧 Información de Contacto</h4>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Correo:</strong> ${estudiante.correo || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Teléfono:</strong> ${estudiante.telefono || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Dirección:</strong> ${estudiante.direccion || 'No registrada'}</p>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #546e7a;">👤 Datos Personales</h4>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Fecha Nacimiento:</strong> ${estudiante.fechaNacimiento || 'No registrada'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Edad:</strong> ${estudiante.edad || 'No registrada'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Tipo de Sangre:</strong> ${estudiante.tipoSangre || 'No registrado'}</p>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #546e7a;">🏫 Información Académica</h4>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Fecha Ingreso:</strong> ${estudiante.fechaIngreso || 'No registrada'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Grado Aspirado:</strong> ${estudiante.gradoAspira || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Grupo Actual:</strong> ${estudiante.grupoNombre || 'Sin asignar'}</p>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #546e7a;">👨‍👩‍👧 Responsable</h4>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Nombre:</strong> ${estudiante.nombreResponsable || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Parentesco:</strong> ${estudiante.parentescoResponsable || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Teléfono:</strong> ${estudiante.telefonoResponsable || 'No registrado'}</p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>Correo:</strong> ${estudiante.correoResponsable || 'No registrado'}</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h4 style="margin: 0 0 10px 0; color: #e65100;">⚕️ Información Médica</h4>
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Alergias:</strong> ${estudiante.alergias || 'Ninguna registrada'}</p>
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Condiciones Médicas:</strong> ${estudiante.condicionesMedicas || 'Ninguna registrada'}</p>
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Medicamentos:</strong> ${estudiante.medicamentos || 'Ninguno registrado'}</p>
+                    </div>
+
+                    ${estudiante.observaciones ? `
+                    <div style="margin-top: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                        <h4 style="margin: 0 0 10px 0; color: #2e7d32;">📝 Observaciones</h4>
+                        <p style="margin: 0; font-size: 14px;">${estudiante.observaciones}</p>
+                    </div>
+                    ` : ''}
+                `;
+
+                modal.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error al cargar hoja de vida:', error);
+                alert('Error al cargar la información del estudiante');
+            }
+        }
+
+        // Cerrar modal de hoja de vida
+        function cerrarModalHojaVidaProf() {
+            document.getElementById('modalHojaVidaProf').style.display = 'none';
+        }
+
     </script>
 </body>
 </html>

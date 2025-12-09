@@ -3,136 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Aspirante - AWUIS</title>
+    <title>Formulario de Admisión - AWUIS</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3fbff; margin:0; padding:0; }
-        .app { display: flex; min-height: 100vh; }
-
-        /* Sidebar */
-        .sidebar { width: 220px; background: linear-gradient(180deg,#00bcd4,#00acc1); color: #fff; padding: 20px; }
-        .brand { background: #fff; color:#333; border-radius:10px; padding:12px; text-align:center; font-weight:bold; margin-bottom:24px; }
-        .menu { list-style:none; padding:0; margin:0; }
-        .menu li { margin-bottom:12px; }
-        .menu a { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; padding:10px 12px; border-radius:8px; }
-        .menu a.active { background: rgba(255,255,255,0.15); font-weight:600; }
-        .menu a:hover { background: rgba(255,255,255,0.08); }
-        .logout { margin-top: 30px; display:block; background:#fff; color:#00bcd4; text-align:center; padding:10px; border-radius:8px; text-decoration:none; font-weight:600; }
-
-        /* Main content */
-        .content { flex:1; padding:36px; }
-        .card { background:#fff; border-radius:14px; padding:24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); max-width:1100px; margin:0 auto; }
-        h1 { margin:0 0 8px; font-size:24px; color:#222; }
-        p.subtitle { margin:0 0 18px; color:#666; }
-
-        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
-        .grid-row { display:flex; gap:14px; }
-        .field { display:flex; flex-direction:column; }
-        label { font-size:0.9rem; color:#444; margin-bottom:6px; }
-        input[type="text"], input[type="email"], input[type="date"], input[type="number"], select, textarea {
-            padding:10px 12px; border-radius:8px; border:1px solid #e6e6e6; font-size:0.95rem; width:100%;
-        }
-        textarea { min-height:100px; resize:vertical; }
-
-        .actions { display:flex; gap:12px; margin-top:18px; }
-        .btn { padding:10px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
-        .btn-primary { background: linear-gradient(90deg,#00bcd4,#0097a7); color:#fff; }
-        .btn-outline { background:#fff; color:#0097a7; border:1px solid #e0e0e0; }
-
-        @media (max-width: 900px) {
-            .sidebar { display:none; }
-            .content { padding:18px; }
-            .grid { grid-template-columns: 1fr; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* Estilos para el overlay de bloqueo */
-        .block-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 9999;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .block-modal {
+        .container {
+            width: 100%;
+            max-width: 900px;
             background: white;
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideDown 0.5s ease-out;
+            overflow: hidden;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            color: white;
+            text-align: center;
         }
 
-        .block-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
         }
 
-        .block-modal h2 {
-            color: #d32f2f;
-            margin: 15px 0 10px;
-            font-size: 22px;
-        }
-
-        .block-modal p {
-            color: #666;
-            font-size: 14px;
-            margin: 10px 0;
-        }
-
-        .countdown {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .countdown p {
-            color: #d32f2f;
-            font-weight: bold;
+        .header p {
             font-size: 16px;
+            opacity: 0.9;
         }
 
-        #timer {
-            font-size: 20px;
-            color: #d32f2f;
-            font-weight: bold;
+        .form-content {
+            padding: 40px 30px;
         }
 
-        /* Estilos para mensajes de error/validación */
-        .error-message {
-            background: #ffebee;
-            border-left: 4px solid #d32f2f;
-            color: #c62828;
-            padding: 14px 16px;
-            border-radius: 4px;
-            margin-bottom: 18px;
-            font-size: 14px;
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             gap: 10px;
             animation: slideIn 0.3s ease-out;
-        }
-
-        .error-message::before {
-            content: '⚠️';
-            font-size: 18px;
         }
 
         @keyframes slideIn {
@@ -146,212 +73,440 @@
             }
         }
 
-        .success-message {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            color: #2e7d32;
-            padding: 14px 16px;
-            border-radius: 4px;
-            margin-bottom: 18px;
-            font-size: 14px;
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e3f2fd;
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s ease-out;
         }
 
-        .success-message::before {
-            content: '✓';
-            font-size: 18px;
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #37474f;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input:disabled,
+        select:disabled,
+        textarea:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f7ff;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Modal de bloqueo */
+        .block-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .block-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .block-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .block-modal h2 {
+            color: #d32f2f;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .block-modal p {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .form-content {
+                padding: 30px 20px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📝 Formulario de Admisión</h1>
+            <p>AWUIS - Sistema de Gestión Académica</p>
+        </div>
 
-<div class="app">
-    <aside class="sidebar">
-        <div class="brand">AWUIS</div>
-        <ul class="menu">
-            <li><a href="#">🏠 Principal</a></li>
-            <li><a class="active" href="#">📝 Formulario</a></li>
-        </ul>
+        <!-- Form Content -->
+        <div class="form-content">
+            <!-- Mensajes de alerta -->
+            <div th:if="${message != null and message != ''}" class="alert alert-success">
+                <span>✓</span>
+                <span th:text="${message}">Mensaje de éxito</span>
+            </div>
 
-        <a class="logout" href="/">← Salir</a>
-    </aside>
+            <div th:if="${error != null and error != ''}" class="alert alert-error">
+                <span>✗</span>
+                <span th:text="${error}">Mensaje de error</span>
+            </div>
 
-    <main class="content">
-        <div class="card">
-            <h1>Formulario de Aspirante</h1>
-            <p class="subtitle">Llena los datos del aspirante para postular al colegio.</p>
+            <form id="formularioAspirante" th:action="@{/formularios/guardar}" method="post" th:object="${formulario}">
 
-            <!-- Mostrar mensajes de error o éxito -->
-            <div th:if="${message != null && message != ''}" th:class="${bloqueado} ? 'error-message' : 'error-message'" th:text="${message}"></div>
-
-            <form action="/formularios/guardar" method="post" th:id="formularioForm" th:attr="data-bloqueado=${bloqueado}" onsubmit="return handleFormSubmit(event)">
-                <!-- Campo hidden para enviar el contador de intentos -->
-                <input type="hidden" id="intentosField" name="intentos" th:value="${intentos}">
-                <section>
-                    <h3 style="margin-top:0;">Datos del estudiante</h3>
-                    <div class="grid">
-                        <div class="field">
-                            <label for="nombre">Nombre completo</label>
-                            <input id="nombre" name="nombre" type="text" placeholder="Nombre y apellidos" th:disabled="${bloqueado}">
+                <!-- Sección: Información del Aspirante -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <span>👤</span>
+                        Información del Aspirante
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="nombreCompleto">Nombre Completo *</label>
+                            <input type="text" id="nombreCompleto"
+                                   th:field="*{nombreCompleto}"
+                                   placeholder="Nombre completo del aspirante" required>
                         </div>
-                        <div class="field">
-                            <label for="fechaNacimiento">Fecha de nacimiento</label>
-                            <input id="fechaNacimiento" name="fechaNacimiento" type="date" th:disabled="${bloqueado}">
+
+                        <div class="form-group">
+                            <label for="fechaNacimiento">Fecha de Nacimiento *</label>
+                            <input type="date" id="fechaNacimiento"
+                                   th:field="*{fechaNacimiento}" required>
                         </div>
-                        <div class="field">
-                            <label for="edad">Edad</label>
-                            <input id="edad" name="edad" type="number" min="1" placeholder="Edad" th:disabled="${bloqueado}">
+
+                        <div class="form-group">
+                            <label for="edad">Edad *</label>
+                            <input type="number" id="edad" min="1"
+                                   th:field="*{edad}"
+                                   placeholder="Edad del aspirante" required>
                         </div>
-                        <div class="field">
-                            <label for="grado">Grado al que aspira</label>
-                            <select id="grado" name="grado">
-                                <option value="">Seleccione...</option>
-                                <option>Preescolar</option>
-                                <option>1º Básico</option>
-                                <option>2º Básico</option>
-                                <option>3º Básico</option>
-                                <option>4º Básico</option>
-                                <option>5º Básico</option>
+
+                        <div class="form-group">
+                            <label for="gradoAspira">Grado al que Aspira *</label>
+                            <select id="gradoAspira"
+                                    th:field="*{gradoAspira}" required>
+                                <option value="">Seleccione un grado...</option>
                             </select>
                         </div>
-                        <div class="field">
-                            <label for="direccion">Dirección</label>
-                            <input id="direccion" name="direccion" type="text" placeholder="Dirección de residencia">
+
+                        <div class="form-group full-width">
+                            <label for="direccion">Dirección de Residencia</label>
+                            <input type="text" id="direccion"
+                                   th:field="*{direccion}"
+                                   placeholder="Dirección completa">
                         </div>
-                        <div class="field">
-                            <label for="tipoSangre">Tipo de sangre</label>
-                            <input id="tipoSangre" name="tipoSangre" type="text" placeholder="Ej: O+">
+
+                        <div class="form-group">
+                            <label for="tipoSangre">Tipo de Sangre</label>
+                            <input type="text" id="tipoSangre"
+                                   th:field="*{tipoSangre}"
+                                   placeholder="Ej: O+, A-, AB+">
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <section style="margin-top:18px;">
-                    <h3>Información médica y observaciones</h3>
-                    <div class="grid">
-                        <div class="field">
+                <!-- Sección: Información Médica -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <span>🏥</span>
+                        Información Médica
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
                             <label for="alergias">Alergias</label>
-                            <input id="alergias" name="alergias" type="text" placeholder="Alergias conocidas">
+                            <textarea id="alergias"
+                                      th:field="*{alergias}"
+                                      placeholder="Indique si tiene alergias conocidas"></textarea>
                         </div>
-                        <div class="field">
-                            <label for="condiciones">Condiciones médicas</label>
-                            <input id="condiciones" name="condiciones" type="text" placeholder="Ej: asma, diabetes">
+
+                        <div class="form-group full-width">
+                            <label for="condicionesMedicas">Condiciones Médicas</label>
+                            <textarea id="condicionesMedicas"
+                                      th:field="*{condicionesMedicas}"
+                                      placeholder="Indique si tiene condiciones médicas especiales"></textarea>
                         </div>
-                        <div class="field">
-                            <label for="condicionesUso">Condiciones que usa</label>
-                            <input id="condicionesUso" name="condicionesUso" type="text" placeholder="Indicar dispositivos o ayudas">
+
+                        <div class="form-group full-width">
+                            <label for="condicionesUsadas">Condiciones de Uso de Medicamentos</label>
+                            <textarea id="condicionesUsadas"
+                                      th:field="*{condicionesUsadas}"
+                                      placeholder="Indique condiciones relacionadas con medicamentos"></textarea>
                         </div>
-                        <div class="field">
-                            <label for="medicamentos">Medicamentos que usa</label>
-                            <input id="medicamentos" name="medicamentos" type="text" placeholder="Medicamentos diarios">
+
+                        <div class="form-group full-width">
+                            <label for="medicamentos">Medicamentos Actuales</label>
+                            <textarea id="medicamentos"
+                                      th:field="*{medicamentos}"
+                                      placeholder="Liste los medicamentos que toma actualmente"></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="observaciones">Observaciones Adicionales</label>
+                            <textarea id="observaciones"
+                                      th:field="*{observaciones}"
+                                      placeholder="Cualquier información adicional relevante"></textarea>
                         </div>
                     </div>
+                </div>
 
-                    <div style="margin-top:12px;">
-                        <label for="observaciones">Observaciones adicionales</label>
-                        <textarea id="observaciones" name="observaciones" placeholder="Observaciones..."></textarea>
+                <!-- Sección: Información del Responsable -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <span>👨‍👩‍👧</span>
+                        Información del Responsable
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="nombreResponsable">Nombre del Responsable *</label>
+                            <input type="text" id="nombreResponsable"
+                                   th:field="*{nombreResponsable}"
+                                   placeholder="Nombre completo del responsable" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telefonoResponsable">Teléfono de Contacto *</label>
+                            <input type="text" id="telefonoResponsable"
+                                   th:field="*{telefonoResponsable}"
+                                   placeholder="Número de teléfono" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="correoResponsable">Correo Electrónico *</label>
+                            <input type="email" id="correoResponsable"
+                                   th:field="*{correoResponsable}"
+                                   placeholder="correo@ejemplo.com" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="parentescoResponsable">Parentesco *</label>
+                            <input type="text" id="parentescoResponsable"
+                                   th:field="*{parentescoResponsable}"
+                                   placeholder="Ej: Madre, Padre, Tutor" required>
+                        </div>
                     </div>
-                </section>
+                </div>
 
-                <section style="margin-top:18px;">
-                    <h3>Contacto del responsable</h3>
-                    <div class="grid">
-                        <div class="field">
-                            <label for="nombreResp">Nombre del responsable</label>
-                            <input id="nombreResp" name="nombreResp" type="text" placeholder="Nombre del padre/madre o acudiente">
-                        </div>
-                        <div class="field">
-                            <label for="telefono">Teléfono</label>
-                            <input id="telefono" name="telefono" type="text" placeholder="Teléfono de contacto">
-                        </div>
-                        <div class="field">
-                            <label for="correo">Correo electrónico</label>
-                            <input id="correo" name="correo" type="email" placeholder="ejemplo@correo.com">
-                        </div>
-                        <div class="field">
-                            <label for="parentesco">Parentesco</label>
-                            <select id="parentesco" name="parentesco">
-                                <option value="">Seleccione...</option>
-                                <option>Padre</option>
-                                <option>Madre</option>
-                                <option>Acudiente</option>
-                                <option>Otro</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary">Guardar formulario</button>
-                    <button type="reset" class="btn btn-outline">Limpiar campos</button>
+                <!-- Botones de acción -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span>✓</span>
+                        <span>Enviar Formulario</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">
+                        <span>←</span>
+                        <span>Volver al Inicio</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </main>
-</div>
-
-<!-- Overlay de bloqueo por exceso de intentos -->
-<div id="blockOverlay" class="block-overlay" th:if="${bloqueado}">
-    <div class="block-modal">
-        <div class="block-icon">⏱️</div>
-        <h2>¡Acceso Bloqueado!</h2>
-        <p th:text="${message}"></p>
-        <div class="countdown">
-            <p>Serás redirigido en <span id="timer">5</span> segundos...</p>
-        </div>
     </div>
-</div>
 
-<script th:if="${bloqueado}">
-    // Deshabilitar todos los campos del formulario
-    document.querySelectorAll('#formularioForm input, #formularioForm select, #formularioForm textarea, #formularioForm button').forEach(field => {
-        field.disabled = true;
-    });
+    <script th:inline="javascript">
+        // Cargar grados desde la base de datos
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/grados')
+                .then(response => response.json())
+                .then(grados => {
+                    const select = document.getElementById('gradoAspira');
+                    grados.forEach(grado => {
+                        const option = document.createElement('option');
+                        option.value = grado;
+                        option.textContent = grado;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar grados:', error);
+                    // En caso de error, usar grados por defecto
+                    const gradosPorDefecto = ['Semillas', 'Jardin', 'Transicion', 'Primero'];
+                    const select = document.getElementById('gradoAspira');
+                    gradosPorDefecto.forEach(grado => {
+                        const option = document.createElement('option');
+                        option.value = grado;
+                        option.textContent = grado;
+                        select.appendChild(option);
+                    });
+                });
 
-    // Countdown de 5 segundos
-    let countdown = 5;
-    const timerSpan = document.getElementById('timer');
 
-    const interval = setInterval(() => {
-        countdown--;
-        timerSpan.textContent = countdown;
-
-        if (countdown <= 0) {
-            clearInterval(interval);
-            localStorage.removeItem('form_attempts');
-            window.location.href = '/';
-        }
-    }, 1000);
-</script>
-
-<script>
-    function handleFormSubmit(event) {
-        // Obtener intentos desde localStorage
-        let currentAttempts = localStorage.getItem('form_attempts') || '0';
-
-        // Establecer en el hidden field
-        document.getElementById('intentosField').value = currentAttempts;
-
-        // Permitir envío
-        return true;
-    }
-
-    // Al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        // Obtener el valor del servidor
-        const field = document.getElementById('intentosField');
-        const serverValue = field ? field.value : '';
-
-        // Si es > 0, guardar en localStorage
-        if (serverValue && serverValue !== '0' && serverValue !== '') {
-            const numValue = parseInt(serverValue);
-            if (!isNaN(numValue)) {
-                localStorage.setItem('form_attempts', String(numValue));
-            }
-        }
-    });
-</script>
+            // Ocultar alertas automáticamente después de 5 segundos
+            setTimeout(function() {
+                const alertas = document.querySelectorAll('.alert');
+                alertas.forEach(function(alerta) {
+                    if (alerta) {
+                        alerta.style.transition = 'opacity 0.5s ease-out';
+                        alerta.style.opacity = '0';
+                        setTimeout(function() {
+                            alerta.style.display = 'none';
+                        }, 500);
+                    }
+                });
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
+

@@ -3,6 +3,9 @@ package com.udistrital.awuis.sistema_academico.controller;
 import com.udistrital.awuis.sistema_academico.model.Usuario;
 import com.udistrital.awuis.sistema_academico.repositories.RolMapper;
 import com.udistrital.awuis.sistema_academico.repositories.UsuarioMapper;
+import com.udistrital.awuis.sistema_academico.repositories.EstudianteMapper;
+import com.udistrital.awuis.sistema_academico.repositories.ProfesorMapper;
+import com.udistrital.awuis.sistema_academico.repositories.DirectivoMapper;
 import com.udistrital.awuis.sistema_academico.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -28,20 +32,50 @@ public class AdministradorController {
     @Autowired
     private RolMapper rolMapper;
 
+    @Autowired
+    private EstudianteMapper estudianteMapper;
+
+    @Autowired
+    private ProfesorMapper profesorMapper;
+
+    @Autowired
+    private DirectivoMapper directivoMapper;
+
     @GetMapping
-    public String mostrarPanelAdministrador(Model model) {
-        // Obtener estadísticas
-        List<Usuario> todosUsuarios = usuarioMapper.findAll();
+    public String mostrarPanelAdministrador(
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario,
+            Model model) {
 
-        // Contar por rol (esto es simplificado, ajustar según tu lógica)
-        long estudiantes = todosUsuarios.size(); // TODO: Filtrar por rol estudiante
-        long profesores = 15; // TODO: Obtener de BD
-        long administradores = 5; // TODO: Obtener de BD
+        // Validar que haya sesión activa
+        if (usuario == null) {
+            return "redirect:/login";
+        }
 
-        model.addAttribute("cantidadEstudiantes", estudiantes);
-        model.addAttribute("cantidadProfesores", profesores);
-        model.addAttribute("cantidadAdministradores", administradores);
-        model.addAttribute("cantidadTotal", estudiantes + profesores + administradores);
+        // Validar que sea administrador (rol 3)
+        if (usuario.getToken() != null && usuario.getToken().getRol() != null) {
+            int idRol = usuario.getToken().getRol().getIdRol();
+            // Si NO es administrador, redirigir a su panel correspondiente
+            if (idRol == 1) {
+                return "redirect:/directivo";
+            } else if (idRol == 2) {
+                return "redirect:/profesor";
+            } else if (idRol == 4) {
+                return "redirect:/estudiante";
+            }
+            // Si es rol 3 (Administrador), continuar normalmente
+        }
+
+        // Obtener estadísticas reales
+        long cantidadEstudiantes = estudianteMapper.listarEstudiantes().size();
+        long cantidadProfesores = profesorMapper.findAll().size();
+        long cantidadDirectivos = directivoMapper.findAll().size();
+        long cantidadAdministradores = 1; // Por defecto 1 administrador
+        long cantidadTotal = usuarioMapper.findAll().size();
+
+        model.addAttribute("cantidadEstudiantes", cantidadEstudiantes);
+        model.addAttribute("cantidadProfesores", cantidadProfesores);
+        model.addAttribute("cantidadAdministradores", cantidadAdministradores);
+        model.addAttribute("cantidadTotal", cantidadTotal);
 
         return "administrador";
     }
@@ -51,6 +85,7 @@ public class AdministradorController {
             @RequestParam String correo,
             @RequestParam String contrasena,
             @RequestParam int idRol,
+            @RequestParam(required = false) String nombre,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -70,8 +105,14 @@ public class AdministradorController {
                 return "redirect:/administrador";
             }
 
+            // Validar nombre para profesores y directivos (roles 1, 2, 3)
+            if ((idRol == 1 || idRol == 2 || idRol == 3) && (nombre == null || nombre.trim().isEmpty())) {
+                redirectAttributes.addFlashAttribute("error", "El nombre es obligatorio para Profesores y Directivos");
+                return "redirect:/administrador";
+            }
+
             // Crear usuario
-            Usuario nuevoUsuario = usuarioService.crearUsuario(correo, contrasena, idRol);
+            Usuario nuevoUsuario = usuarioService.crearUsuario(correo, contrasena, idRol, nombre);
 
             redirectAttributes.addFlashAttribute("mensaje",
                 "Cuenta creada exitosamente para " + correo);

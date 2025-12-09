@@ -202,25 +202,21 @@ public class CorreoController {
             List<Estudiante> listaEstudiantes = estudianteMapper.listarEstudiantes();
 
             for (Estudiante est : listaEstudiantes) {
-                if (est.getIdUsuario() != null) {
-                    var usuarioOpt = usuarioMapper.findById(est.getIdUsuario());
-                    if (usuarioOpt.isPresent()) {
-                        Usuario usuario = usuarioOpt.get();
-                        Map<String, String> info = new HashMap<>();
+                if (est.getIdEstudiante() > 0) {
+                    Map<String, String> info = new HashMap<>();
 
-                        // Obtener el nombre del formulario si existe
-                        String nombre = "Estudiante";
-                        if (est.getIdFormulario() != null) {
-                            Formulario formulario = formularioMapper.obtenerPorId(est.getIdFormulario());
-                            if (formulario != null && formulario.getNombreCompleto() != null) {
-                                nombre = formulario.getNombreCompleto();
-                            }
+                    // Obtener el nombre del formulario si existe
+                    String nombre = "Estudiante";
+                    if (est.getIdFormulario() != null) {
+                        Formulario formulario = formularioMapper.obtenerPorId(est.getIdFormulario());
+                        if (formulario != null && formulario.getNombreCompleto() != null) {
+                            nombre = formulario.getNombreCompleto();
                         }
-
-                        info.put("nombre", nombre);
-                        info.put("correo", usuario.getCorreo());
-                        estudiantes.add(info);
                     }
+
+                    info.put("nombre", nombre);
+                    info.put("correo", est.getCorreo());
+                    estudiantes.add(info);
                 }
             }
         } catch (Exception e) {

@@ -5,24 +5,28 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 /**
- * Entidad Usuario:
- * - contrasena: String → mapea a columna "contraseña" (con comillas y tilde en DB)
- * - correo: String (columna sin comillas en DB)
- * - idUsuario: int → mapea a columna "idUsuario" (con comillas en DB)
- * - token: TokenUsuario → FK "idToken" (con comillas en DB)
+ * Entidad Usuario - Representa un usuario en el sistema.
+ * Usado mediante COMPOSICIÓN por Profesor, Directivo y Estudiante.
  *
- * Estrategia JOINED: Usuario y Directivo tienen tablas separadas unidas por JOIN
+ * NOTA IMPORTANTE: En el diagrama de clases UML mostramos herencia (IS-A) porque
+ * semánticamente un Profesor ES-UN Usuario. Sin embargo, en la implementación
+ * usamos COMPOSICIÓN (HAS-A) siguiendo el principio "Composition over Inheritance"
+ * debido a:
+ * 1. Incompatibilidad de nuestra estructura de BD con herencia JPA
+ * 2. Mayor flexibilidad y menor acoplamiento
+ * 3. Práctica estándar en sistemas empresariales con ORM
  */
 @Entity
 @Table(name = "\"Usuario\"")
-@Inheritance(strategy = InheritanceType.JOINED)
 public class Usuario {
 
     @Column(name = "\"contraseña\"")

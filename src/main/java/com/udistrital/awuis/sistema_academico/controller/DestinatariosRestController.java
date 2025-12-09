@@ -5,8 +5,10 @@ import com.udistrital.awuis.sistema_academico.model.Estudiante;
 import com.udistrital.awuis.sistema_academico.model.Formulario;
 import com.udistrital.awuis.sistema_academico.model.Usuario;
 import com.udistrital.awuis.sistema_academico.repositories.AspiranteMapper;
+import com.udistrital.awuis.sistema_academico.repositories.DirectivoMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EstudianteMapper;
 import com.udistrital.awuis.sistema_academico.repositories.FormularioMapper;
+import com.udistrital.awuis.sistema_academico.repositories.ProfesorMapper;
 import com.udistrital.awuis.sistema_academico.repositories.UsuarioMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,12 @@ public class DestinatariosRestController {
 
     @Autowired
     private UsuarioMapper usuarioMapper;
+
+    @Autowired
+    private ProfesorMapper profesorMapper;
+
+    @Autowired
+    private DirectivoMapper directivoMapper;
 
     @Autowired
     private EstudianteMapper estudianteMapper;
@@ -45,25 +53,21 @@ public class DestinatariosRestController {
             List<Estudiante> listaEstudiantes = estudianteMapper.listarEstudiantes();
 
             for (Estudiante est : listaEstudiantes) {
-                if (est.getIdUsuario() != null) {
-                    var usuarioOpt = usuarioMapper.findById(est.getIdUsuario());
-                    if (usuarioOpt.isPresent()) {
-                        Usuario usuario = usuarioOpt.get();
-                        Map<String, String> info = new HashMap<>();
+                if (est.getIdEstudiante() > 0) {
+                    Map<String, String> info = new HashMap<>();
 
-                        // Obtener el nombre del formulario si existe
-                        String nombre = "Estudiante";
-                        if (est.getIdFormulario() != null) {
-                            Formulario formulario = formularioMapper.obtenerPorId(est.getIdFormulario());
-                            if (formulario != null && formulario.getNombreCompleto() != null) {
-                                nombre = formulario.getNombreCompleto();
-                            }
+                    // Obtener el nombre del formulario si existe
+                    String nombre = "Estudiante";
+                    if (est.getIdFormulario() != null) {
+                        Formulario formulario = formularioMapper.obtenerPorId(est.getIdFormulario());
+                        if (formulario != null && formulario.getNombreCompleto() != null) {
+                            nombre = formulario.getNombreCompleto();
                         }
-
-                        info.put("nombre", nombre);
-                        info.put("correo", usuario.getCorreo());
-                        estudiantes.add(info);
                     }
+
+                    info.put("nombre", nombre);
+                    info.put("correo", est.getCorreo());
+                    estudiantes.add(info);
                 }
             }
         } catch (Exception e) {
@@ -82,7 +86,7 @@ public class DestinatariosRestController {
         List<Map<String, String>> profesores = new ArrayList<>();
 
         try {
-            // Obtener todos los usuarios con rol de profesor (idRol = 2)
+            //  Obtener todos los usuarios con rol de profesor (idRol = 2)
             List<Usuario> todosUsuarios = usuarioMapper.findAll();
 
             for (Usuario usuario : todosUsuarios) {
@@ -90,11 +94,19 @@ public class DestinatariosRestController {
                         && usuario.getToken().getRol().getIdRol() == 2) {
                     Map<String, String> info = new HashMap<>();
 
-                    // Usar el nombre del correo como identificador
-                    String nombre = usuario.getCorreo().split("@")[0];
-                    nombre = nombre.substring(0, 1).toUpperCase() + nombre.substring(1);
+                    // Buscar el Profesor para obtener su nombre
+                    String nombreProfesor = "Profesor";
+                    try {
+                        com.udistrital.awuis.sistema_academico.model.Profesor profesor =
+                            profesorMapper.findByIdUsuario(usuario.getIdUsuario()).orElse(null);
+                        if (profesor != null && profesor.getNombre() != null && !profesor.getNombre().trim().isEmpty()) {
+                            nombreProfesor = profesor.getNombre();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error al buscar nombre del profesor: " + e.getMessage());
+                    }
 
-                    info.put("nombre", "Prof. " + nombre);
+                    info.put("nombre", "Prof. " + nombreProfesor);
                     info.put("correo", usuario.getCorreo());
                     profesores.add(info);
                 }
@@ -123,11 +135,19 @@ public class DestinatariosRestController {
                         && usuario.getToken().getRol().getIdRol() == 1) {
                     Map<String, String> info = new HashMap<>();
 
-                    // Usar el nombre del correo como identificador
-                    String nombre = usuario.getCorreo().split("@")[0];
-                    nombre = nombre.substring(0, 1).toUpperCase() + nombre.substring(1);
+                    // Buscar el Directivo para obtener su nombre
+                    String nombreDirectivo = "Directivo";
+                    try {
+                        com.udistrital.awuis.sistema_academico.model.Directivo directivo =
+                            directivoMapper.findByIdUsuario(usuario.getIdUsuario()).orElse(null);
+                        if (directivo != null && directivo.getNombre() != null && !directivo.getNombre().trim().isEmpty()) {
+                            nombreDirectivo = directivo.getNombre();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error al buscar nombre del directivo: " + e.getMessage());
+                    }
 
-                    info.put("nombre", "Dir. " + nombre);
+                    info.put("nombre", "Dir. " + nombreDirectivo);
                     info.put("correo", usuario.getCorreo());
                     directivos.add(info);
                 }

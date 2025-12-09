@@ -347,15 +347,21 @@
             <h3>➕ Crear Nueva Cuenta</h3>
 
             <!-- Mensajes de éxito/error -->
-            <div th:if="${mensaje}" style="padding: 15px; background: #c8e6c9; color: #2e7d32; border-radius: 8px; margin-bottom: 20px;">
+            <div th:if="${mensaje}" id="mensajeExito" style="padding: 15px; background: #c8e6c9; color: #2e7d32; border-radius: 8px; margin-bottom: 20px;">
                 <strong>✓</strong> <span th:text="${mensaje}"></span>
             </div>
-            <div th:if="${error}" style="padding: 15px; background: #ffcdd2; color: #c62828; border-radius: 8px; margin-bottom: 20px;">
+            <div th:if="${error}" id="mensajeError" style="padding: 15px; background: #ffcdd2; color: #c62828; border-radius: 8px; margin-bottom: 20px;">
                 <strong>✗</strong> <span th:text="${error}"></span>
             </div>
 
             <form id="crearCuentaForm" th:action="@{/administrador/crear-cuenta}" method="post">
                 <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nombre Completo</label>
+                        <input type="text" name="nombre" id="nombreInput" class="form-control" placeholder="Nombre del profesor o directivo">
+                        <small style="color: #78909c; font-size: 12px;">Requerido para Profesores y Directivos</small>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Correo Electrónico</label>
                         <input type="email" name="correo" class="form-control" placeholder="usuario@ejemplo.com" required>
@@ -369,7 +375,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Rol de Usuario</label>
-                    <select name="idRol" class="form-select" required>
+                    <select name="idRol" id="rolSelect" class="form-select" required>
                         <option value="">Seleccione un rol</option>
                         <option value="1">Directivo</option>
                         <option value="2">Profesor</option>
@@ -382,6 +388,47 @@
     </div>
 
     <script>
+        // Ocultar mensajes de éxito/error después de 3 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const mensajeExito = document.getElementById('mensajeExito');
+            const mensajeError = document.getElementById('mensajeError');
+
+            if (mensajeExito) {
+                setTimeout(() => {
+                    mensajeExito.style.transition = 'opacity 0.5s ease';
+                    mensajeExito.style.opacity = '0';
+                    setTimeout(() => {
+                        mensajeExito.remove();
+                    }, 500);
+                }, 3000);
+            }
+
+            if (mensajeError) {
+                setTimeout(() => {
+                    mensajeError.style.transition = 'opacity 0.5s ease';
+                    mensajeError.style.opacity = '0';
+                    setTimeout(() => {
+                        mensajeError.remove();
+                    }, 500);
+                }, 3000);
+            }
+        });
+
+        // Mostrar/ocultar campo nombre según el rol seleccionado
+        document.getElementById('rolSelect').addEventListener('change', function() {
+            const nombreInput = document.getElementById('nombreInput');
+            const valor = this.value;
+
+            // Roles 1, 2, 3 requieren nombre (Directivo, Profesor)
+            if (valor === '1' || valor === '2' || valor === '3') {
+                nombreInput.required = true;
+                nombreInput.parentElement.style.display = 'block';
+            } else {
+                nombreInput.required = false;
+                nombreInput.value = '';
+            }
+        });
+
         // Activar menu item al hacer click
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function(e) {

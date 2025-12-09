@@ -381,7 +381,11 @@
             </div>
             <div class="user-badge">
                 <div class="user-avatar">👤</div>
-                <span th:text="${nombreEstudiante}">Estudiante</span>
+                <div>
+                    <span th:text="${nombreEstudiante}">Estudiante</span>
+                    <br>
+                    <small style="font-size: 12px; color: #78909c;">(Estudiante)</small>
+                </div>
             </div>
         </div>
 
@@ -890,7 +894,14 @@
                         const result = await response.json();
 
                         if (result.success) {
-                            // Limpiar formulario ANTES de mostrar el mensaje
+                            // Mostrar mensaje de éxito (y advertencia si existe) ANTES de limpiar
+                            let mensaje = result.message;
+                            if (result.warning) {
+                                mensaje += '\n\n⚠️ ' + result.warning;
+                            }
+                            alert(mensaje);
+
+                            // Limpiar formulario DESPUÉS del alert
                             document.getElementById('asuntoInput').value = '';
                             document.getElementById('mensajeInput').value = '';
                             document.getElementById('asuntoCounter').textContent = '0';
@@ -901,13 +912,6 @@
                             document.querySelectorAll('#seccion-destinatarios input[type="checkbox"]').forEach(cb => cb.checked = false);
                             actualizarContadorDestinatarios();
 
-                            // Mostrar mensaje de éxito (y advertencia si existe)
-                            let mensaje = result.message;
-                            if (result.warning) {
-                                mensaje += '\n\n⚠️ ' + result.warning;
-                            }
-                            alert(mensaje);
-
                             // Volver al panel principal
                             mostrarPanel('principal');
                         } else {
@@ -915,7 +919,10 @@
                         }
                     } catch (error) {
                         console.error('Error al enviar correo:', error);
-                        alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.');
+                        // Solo mostrar error si no es después de un éxito
+                        if (!error.message.includes('undefined')) {
+                            alert('Error de conexión al enviar el correo. Por favor, verifica tu conexión e intenta de nuevo.');
+                        }
                     } finally {
                         // Restaurar botón
                         btnEnviar.disabled = false;
