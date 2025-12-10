@@ -709,12 +709,88 @@
         <div id="panel-logros" class="panel">
             <div class="top-bar">
                 <div class="welcome-text">
-                    <h2>🎓 Registrar Logros</h2>
-                    <p>Registra los logros académicos de los estudiantes</p>
+                    <h2>🎓 Gestión de Logros Académicos</h2>
+                    <p>Registra y consulta los logros de tus estudiantes</p>
                 </div>
             </div>
-            <div class="card">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Módulo de logros en desarrollo...</p>
+
+            <!-- Paso 1: Búsqueda de estudiante -->
+            <div class="card" id="busquedaEstudianteLogros" style="margin-bottom: 20px;">
+                <h3 style="color: #00838f; margin-bottom: 20px; font-size: 18px;">
+                    📋 Paso 1: Seleccionar Estudiante
+                </h3>
+
+                <!-- Barra de búsqueda -->
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                    <input
+                        type="text"
+                        id="buscarEstudianteLogros"
+                        placeholder="🔍 Buscar por ID, nombre o grupo..."
+                        style="flex: 1; padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                        oninput="filtrarEstudiantesLogros()">
+
+                    <select
+                        id="filtroGrupoLogros"
+                        style="padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; min-width: 200px;"
+                        onchange="filtrarEstudiantesLogros()">
+                        <option value="">Todos los grupos</option>
+                    </select>
+                </div>
+
+                <!-- Lista de estudiantes -->
+                <div id="listaEstudiantesLogros" style="max-height: 400px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 40px; color: #78909c;">
+                        <p>Cargando estudiantes...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 2: Formulario de registro de logros (oculto inicialmente) -->
+            <div class="card" id="formularioLogros" style="display: none;">
+                <button
+                    onclick="volverABusquedaLogros()"
+                    style="background: #78909c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-size: 14px;">
+                    ← Volver a búsqueda
+                </button>
+
+                <h3 style="color: #00838f; margin-bottom: 20px; font-size: 20px;" id="tituloEstudianteLogros">
+                    Registrar Logros
+                </h3>
+
+                <!-- Selector de periodo académico -->
+                <div style="background: #e0f7fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; color: #00838f; margin-bottom: 12px; font-size: 15px;">
+                        📅 Periodo Académico:
+                    </label>
+                    <select
+                        id="periodoAcademico"
+                        onchange="verificarLogrosCompletos()"
+                        style="width: 100%; padding: 12px 20px; border: 2px solid #00838f; border-radius: 8px; font-size: 14px; background: white;">
+                        <option value="">Seleccione un periodo</option>
+                        <option value="1">1er Periodo</option>
+                        <option value="2">2do Periodo</option>
+                        <option value="3">3er Periodo</option>
+                        <option value="4">4to Periodo</option>
+                    </select>
+                </div>
+
+                <!-- Listado de logros por categoría -->
+                <div id="categoriasLogrosContainer">
+                    <div style="text-align: center; padding: 40px; color: #78909c;">
+                        <p>Cargando logros...</p>
+                    </div>
+                </div>
+
+                <!-- Botón para guardar -->
+                <div style="text-align: right; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <button
+                        id="btnGuardarLogros"
+                        onclick="guardarLogrosEstudiante()"
+                        disabled
+                        style="background: linear-gradient(135deg, #26a69a 0%, #00838f 100%); color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,131,143,0.3); opacity: 0.5;">
+                        💾 Guardar Logros
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1311,6 +1387,8 @@
                 return;
             }
 
+            // Ocultar el mensaje de vacío y mostrar el grid
+            empty.style.display = 'none';
             grid.style.display = 'grid';
             grid.innerHTML = '';
 
@@ -1765,6 +1843,468 @@
             }
         `;
         document.head.appendChild(styleObservadorProf);
+
+        // ========================================
+        // MÓDULO DE GESTIÓN DE LOGROS
+        // ========================================
+
+        let todosLosEstudiantesLogros = [];
+        let todosLosGruposLogros = [];
+        let estudianteSeleccionadoLogros = null;
+        let categoriasLogros = [];
+        let todosLosLogros = [];
+        let logrosEstudianteActual = {};
+
+        // Cargar datos al mostrar el panel de logros
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLogros = document.querySelector('a[onclick*="logros"]');
+            if (menuLogros) {
+                menuLogros.addEventListener('click', function() {
+                    setTimeout(() => {
+                        cargarDatosLogros();
+                    }, 100);
+                });
+            }
+        });
+
+        async function cargarDatosLogros() {
+            try {
+                // Cargar estudiantes
+                const responseEstudiantes = await fetch('/profesor/api/estudiantes');
+                if (responseEstudiantes.ok) {
+                    todosLosEstudiantesLogros = await responseEstudiantes.json();
+                }
+
+                // Cargar grupos
+                const responseGrupos = await fetch('/profesor/api/grupos');
+                if (responseGrupos.ok) {
+                    todosLosGruposLogros = await responseGrupos.json();
+                    cargarFiltroGruposLogros();
+                }
+
+                // Cargar categorías y logros
+                const responseCategorias = await fetch('/profesor/api/categorias-logros');
+                if (responseCategorias.ok) {
+                    const dataCategorias = await responseCategorias.json();
+                    if (dataCategorias.success) {
+                        categoriasLogros = dataCategorias.categorias;
+                    }
+                }
+
+                const responseLogros = await fetch('/profesor/api/logros');
+                if (responseLogros.ok) {
+                    const dataLogros = await responseLogros.json();
+                    if (dataLogros.success) {
+                        todosLosLogros = dataLogros.logros;
+                    }
+                }
+
+                mostrarEstudiantesLogros(todosLosEstudiantesLogros);
+            } catch (error) {
+                console.error('Error al cargar datos de logros:', error);
+            }
+        }
+
+        function cargarFiltroGruposLogros() {
+            const select = document.getElementById('filtroGrupoLogros');
+            select.innerHTML = '<option value="">Todos los grupos</option>';
+            todosLosGruposLogros.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.idGrupo;
+                option.textContent = grupo.nombre;
+                select.appendChild(option);
+            });
+        }
+
+        function mostrarEstudiantesLogros(estudiantes) {
+            const lista = document.getElementById('listaEstudiantesLogros');
+
+            if (estudiantes.length === 0) {
+                lista.innerHTML = '<div style="text-align: center; padding: 40px; color: #90a4ae;"><p>No se encontraron estudiantes</p></div>';
+                return;
+            }
+
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">';
+
+            estudiantes.forEach(est => {
+                const nombreCompleto = est.usuario?.nombreCompleto || 'Sin nombre';
+                const correo = est.usuario?.correo || 'Sin correo';
+                const grupo = est.nombreGrupo || 'Sin grupo';
+
+                html += `
+                    <div style="background: white; border: 2px solid #e0e0e0; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s ease;"
+                         onmouseover="this.style.borderColor='#00838f'; this.style.boxShadow='0 4px 12px rgba(0,131,143,0.2)';"
+                         onmouseout="this.style.borderColor='#e0e0e0'; this.style.boxShadow='';"
+                         onclick="seleccionarEstudianteLogros(${est.idEstudiante})">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #26a69a 0%, #00838f 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                                ${nombreCompleto.charAt(0).toUpperCase()}
+                            </div>
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0; font-size: 15px; color: #37474f;">${nombreCompleto}</h4>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; color: #78909c;">ID: ${est.idEstudiante}</p>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid #e0e0e0; padding-top: 10px; margin-top: 10px;">
+                            <p style="margin: 0; font-size: 13px; color: #546e7a;"><strong>📧</strong> ${correo}</p>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #546e7a;"><strong>🎓</strong> ${grupo}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            lista.innerHTML = html;
+        }
+
+        function filtrarEstudiantesLogros() {
+            const query = document.getElementById('buscarEstudianteLogros').value.toLowerCase().trim();
+            const grupoId = document.getElementById('filtroGrupoLogros').value;
+
+            let filtrados = todosLosEstudiantesLogros;
+
+            if (query) {
+                filtrados = filtrados.filter(e => {
+                    const idStr = String(e.idEstudiante);
+                    const nombreCompleto = (e.usuario?.nombreCompleto || '').toLowerCase();
+                    const correo = (e.usuario?.correo || '').toLowerCase();
+                    const grupo = (e.nombreGrupo || '').toLowerCase();
+                    return idStr.includes(query) || nombreCompleto.includes(query) || correo.includes(query) || grupo.includes(query);
+                });
+            }
+
+            if (grupoId) {
+                filtrados = filtrados.filter(e => e.idGrupo === parseInt(grupoId));
+            }
+
+            mostrarEstudiantesLogros(filtrados);
+        }
+
+        async function seleccionarEstudianteLogros(idEstudiante) {
+            estudianteSeleccionadoLogros = todosLosEstudiantesLogros.find(e => e.idEstudiante === idEstudiante);
+
+            if (!estudianteSeleccionadoLogros) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+
+            // Ocultar búsqueda y mostrar formulario
+            document.getElementById('busquedaEstudianteLogros').style.display = 'none';
+            document.getElementById('formularioLogros').style.display = 'block';
+
+            // Actualizar título
+            const nombreCompleto = estudianteSeleccionadoLogros.usuario?.nombreCompleto || 'Estudiante';
+            document.getElementById('tituloEstudianteLogros').textContent = `Registrar Logros - ${nombreCompleto}`;
+
+            // Cargar periodos registrados y actualizar el selector
+            await cargarPeriodosDisponibles(idEstudiante);
+
+            // Cargar logros del estudiante
+            await cargarLogrosEstudiante(idEstudiante);
+
+            // Mostrar formulario de logros
+            mostrarFormularioLogros();
+        }
+
+        async function cargarPeriodosDisponibles(idEstudiante) {
+            try {
+                const response = await fetch(`/profesor/api/estudiante/${idEstudiante}/periodos-registrados`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const periodosRegistrados = data.periodos || [];
+                        const selectPeriodo = document.getElementById('periodoAcademico');
+
+                        // Limpiar y reconstruir opciones
+                        selectPeriodo.innerHTML = '<option value="">Seleccione un periodo</option>';
+
+                        // Agregar solo los periodos no registrados
+                        const todosLosPeriodos = [
+                            { value: 1, text: '1er Periodo' },
+                            { value: 2, text: '2do Periodo' },
+                            { value: 3, text: '3er Periodo' },
+                            { value: 4, text: '4to Periodo' }
+                        ];
+
+                        todosLosPeriodos.forEach(periodo => {
+                            if (!periodosRegistrados.includes(periodo.value)) {
+                                const option = document.createElement('option');
+                                option.value = periodo.value;
+                                option.textContent = periodo.text;
+                                selectPeriodo.appendChild(option);
+                            }
+                        });
+
+                        // Si todos los periodos están registrados, mostrar mensaje
+                        if (periodosRegistrados.length >= 4) {
+                            selectPeriodo.innerHTML = '<option value="">Todos los periodos ya están registrados</option>';
+                            selectPeriodo.disabled = true;
+                        } else {
+                            selectPeriodo.disabled = false;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar periodos disponibles:', error);
+            }
+        }
+
+        async function cargarLogrosEstudiante(idEstudiante) {
+            try {
+                const response = await fetch(`/profesor/api/estudiante/${idEstudiante}/logros`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.logros) {
+                        // Organizar logros por ID
+                        logrosEstudianteActual = {};
+                        data.logros.forEach(lb => {
+                            logrosEstudianteActual[lb.idLogro] = {
+                                valoracion: lb.valoracion,
+                                comentario: lb.comentario
+                            };
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar logros del estudiante:', error);
+            }
+        }
+
+        function mostrarFormularioLogros() {
+            const container = document.getElementById('categoriasLogrosContainer');
+            const btnGuardar = document.getElementById('btnGuardarLogros');
+
+            // Deshabilitar botón por defecto
+            if (btnGuardar) {
+                btnGuardar.disabled = true;
+                btnGuardar.style.opacity = '0.5';
+                btnGuardar.style.cursor = 'not-allowed';
+            }
+
+            if (categoriasLogros.length === 0 || todosLosLogros.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #90a4ae;"><p>No hay logros disponibles. Contacte al administrador.</p></div>';
+                return;
+            }
+
+            let html = '';
+
+            categoriasLogros.forEach(categoria => {
+                const logrosCategoria = todosLosLogros.filter(l => l.idCategoria === categoria.idCategoria);
+
+                if (logrosCategoria.length === 0) return;
+
+                html += `
+                    <div style="background: #f5f5f5; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="color: #00838f; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                            📚 ${categoria.nombre}
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                `;
+
+                logrosCategoria.forEach(logro => {
+                    const valoracionActual = logrosEstudianteActual[logro.idLogro]?.valoracion || '';
+
+                    html += `
+                        <div style="background: white; border-radius: 8px; padding: 15px; border: 2px solid #e0e0e0;">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <div style="flex: 1;">
+                                    <p style="margin: 0; color: #37474f; font-size: 14px; font-weight: 500;">
+                                        ${logro.descripcion}
+                                    </p>
+                                </div>
+                                <select
+                                    class="logro-valoracion"
+                                    data-id-logro="${logro.idLogro}"
+                                    onchange="verificarLogrosCompletos()"
+                                    style="padding: 10px 15px; border: 2px solid #00838f; border-radius: 6px; font-size: 14px; min-width: 150px; background: white; cursor: pointer;">
+                                    <option value="">Seleccionar</option>
+                                    <option value="Superior" ${valoracionActual === 'Superior' ? 'selected' : ''}>Superior</option>
+                                    <option value="Alto" ${valoracionActual === 'Alto' ? 'selected' : ''}>Alto</option>
+                                    <option value="Básico" ${valoracionActual === 'Básico' ? 'selected' : ''}>Básico</option>
+                                    <option value="Bajo" ${valoracionActual === 'Bajo' ? 'selected' : ''}>Bajo</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Habilitar botón SOLO si el formulario se cargó correctamente
+            if (btnGuardar && todosLosLogros.length > 0) {
+                // Verificar si ya hay logros completos
+                verificarLogrosCompletos();
+            }
+        }
+
+        // Nueva función para verificar si se han completado todos los logros
+        function verificarLogrosCompletos() {
+            const btnGuardar = document.getElementById('btnGuardarLogros');
+            const periodo = document.getElementById('periodoAcademico')?.value;
+
+            if (!btnGuardar) return;
+
+            // Contar logros calificados
+            const valoraciones = document.querySelectorAll('.logro-valoracion');
+            let calificados = 0;
+
+            valoraciones.forEach(select => {
+                if (select.value && select.value !== '') {
+                    calificados++;
+                }
+            });
+
+            const totalLogros = todosLosLogros.length;
+
+            // Habilitar botón solo si:
+            // 1. Hay periodo seleccionado
+            // 2. Todos los logros están calificados
+            if (periodo && periodo !== '' && calificados === totalLogros) {
+                btnGuardar.disabled = false;
+                btnGuardar.style.opacity = '1';
+                btnGuardar.style.cursor = 'pointer';
+            } else {
+                btnGuardar.disabled = true;
+                btnGuardar.style.opacity = '0.5';
+                btnGuardar.style.cursor = 'not-allowed';
+            }
+        }
+
+        async function guardarLogrosEstudiante() {
+            // Validación 1: Verificar que hay un estudiante seleccionado
+            if (!estudianteSeleccionadoLogros) {
+                alert('⚠️ No hay estudiante seleccionado.\n\nPor favor seleccione un estudiante primero.');
+                return;
+            }
+
+            // Validación 2: Verificar que hay logros disponibles
+            if (!todosLosLogros || todosLosLogros.length === 0) {
+                alert('⚠️ No hay logros disponibles en el sistema.\n\nContacte al administrador.');
+                return;
+            }
+
+            // Validación 3: Verificar que se seleccionó un periodo
+            const selectPeriodo = document.getElementById('periodoAcademico');
+            if (!selectPeriodo) {
+                alert('⚠️ Error: No se encontró el selector de periodo.');
+                return;
+            }
+
+            const periodo = selectPeriodo.value;
+            if (!periodo || periodo === '') {
+                alert('⚠️ Debe seleccionar un periodo académico antes de guardar.\n\n1. Seleccione el periodo (1er, 2do, 3er o 4to)\n2. Califique todos los logros\n3. Guarde el boletín');
+                // Resaltar el selector de periodo
+                selectPeriodo.style.border = '3px solid #e53935';
+                setTimeout(() => {
+                    selectPeriodo.style.border = '2px solid #00838f';
+                }, 2000);
+                return;
+            }
+
+            // Validación 4: Recopilar todas las valoraciones
+            const valoraciones = document.querySelectorAll('.logro-valoracion');
+            if (!valoraciones || valoraciones.length === 0) {
+                alert('⚠️ No se encontraron logros para calificar.\n\nIntente recargar la página.');
+                return;
+            }
+
+            const logrosAGuardar = [];
+            valoraciones.forEach(select => {
+                const idLogro = select.getAttribute('data-id-logro');
+                const valoracion = select.value;
+
+                if (valoracion && valoracion !== '') {
+                    logrosAGuardar.push({
+                        idLogro: parseInt(idLogro),
+                        valoracion: valoracion
+                    });
+                }
+            });
+
+            // Validación 5: Verificar que se calificaron TODOS los logros
+            const totalLogros = todosLosLogros.length;
+            if (logrosAGuardar.length === 0) {
+                alert('⚠️ No ha calificado ningún logro.\n\nDebe seleccionar una valoración (Superior, Alto, Básico o Bajo) para cada uno de los ' + totalLogros + ' logros antes de guardar.');
+                return;
+            }
+
+            if (logrosAGuardar.length < totalLogros) {
+                alert(`⚠️ Debe calificar TODOS los logros antes de guardar.\n\n✅ Calificados: ${logrosAGuardar.length} de ${totalLogros}\n❌ Faltan: ${totalLogros - logrosAGuardar.length} logro(s) por calificar\n\nPor favor revise y califique los logros faltantes.`);
+                return;
+            }
+
+            // Validación 6: Confirmación final
+            const nombrePeriodo = ['1er Periodo', '2do Periodo', '3er Periodo', '4to Periodo'][parseInt(periodo) - 1] || 'Periodo ' + periodo;
+            if (!confirm(`¿Está seguro de guardar el boletín?\n\n📋 Estudiante: ${estudianteSeleccionadoLogros.usuario?.nombreCompleto || 'Sin nombre'}\n📅 Periodo: ${nombrePeriodo}\n✅ Logros calificados: ${logrosAGuardar.length}\n\n⚠️ IMPORTANTE: Una vez guardado, no podrá registrar este periodo nuevamente para este estudiante.`)) {
+                return;
+            }
+
+            // Guardar cada logro
+            let guardadosExitosos = 0;
+            let errores = 0;
+
+            for (const logro of logrosAGuardar) {
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('idLogro', logro.idLogro);
+                    formData.append('valoracion', logro.valoracion);
+                    formData.append('periodo', periodo);
+                    formData.append('comentario', '');
+
+                    const response = await fetch(`/profesor/api/estudiante/${estudianteSeleccionadoLogros.idEstudiante}/logro/guardar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        guardadosExitosos++;
+                    } else {
+                        errores++;
+                        console.error('Error al guardar logro:', data.message);
+                    }
+                } catch (error) {
+                    errores++;
+                    console.error('Error al guardar logro:', error);
+                }
+            }
+
+            if (guardadosExitosos === logrosAGuardar.length) {
+                alert(`✅ ¡Boletín guardado exitosamente!\n\nSe guardaron ${guardadosExitosos} logros para el periodo ${periodo}.`);
+                volverABusquedaLogros();
+            } else if (guardadosExitosos > 0) {
+                alert(`⚠️ Se guardaron ${guardadosExitosos} logro(s) exitosamente.\nHubo ${errores} error(es) al guardar algunos logros.`);
+            } else {
+                alert('❌ No se pudo guardar el boletín. Por favor intente de nuevo.');
+            }
+        }
+
+        function volverABusquedaLogros() {
+            document.getElementById('formularioLogros').style.display = 'none';
+            document.getElementById('busquedaEstudianteLogros').style.display = 'block';
+            document.getElementById('periodoAcademico').value = '';
+
+            // Deshabilitar botón de guardar
+            const btnGuardar = document.getElementById('btnGuardarLogros');
+            if (btnGuardar) {
+                btnGuardar.disabled = true;
+                btnGuardar.style.opacity = '0.5';
+                btnGuardar.style.cursor = 'not-allowed';
+            }
+
+            estudianteSeleccionadoLogros = null;
+            logrosEstudianteActual = {};
+        }
 
     </script>
 </body>

@@ -1,6 +1,7 @@
 package com.udistrital.awuis.sistema_academico.controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,16 +14,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttribute;
 
+import com.udistrital.awuis.sistema_academico.model.Boletin;
+import com.udistrital.awuis.sistema_academico.model.CategoriaLogro;
 import com.udistrital.awuis.sistema_academico.model.Estudiante;
 import com.udistrital.awuis.sistema_academico.model.Formulario;
 import com.udistrital.awuis.sistema_academico.model.HistorialAcademico;
+import com.udistrital.awuis.sistema_academico.model.Logro;
+import com.udistrital.awuis.sistema_academico.model.LogroBoletin;
 import com.udistrital.awuis.sistema_academico.model.Profesor;
 import com.udistrital.awuis.sistema_academico.model.Usuario;
+import com.udistrital.awuis.sistema_academico.repositories.BoletinMapper;
+import com.udistrital.awuis.sistema_academico.repositories.CategoriaLogroMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EstudianteMapper;
 import com.udistrital.awuis.sistema_academico.repositories.FormularioMapper;
 import com.udistrital.awuis.sistema_academico.repositories.GradoMapper;
 import com.udistrital.awuis.sistema_academico.repositories.GrupoMapper;
 import com.udistrital.awuis.sistema_academico.repositories.HistorialAcademicoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.LogroBoletinMapper;
+import com.udistrital.awuis.sistema_academico.repositories.LogroMapper;
 import com.udistrital.awuis.sistema_academico.repositories.ObservadorMapper;
 import com.udistrital.awuis.sistema_academico.repositories.ProfesorMapper;
 
@@ -49,6 +58,18 @@ public class ProfesorController {
 
     @Autowired
     private ObservadorMapper observadorMapper;
+
+    @Autowired
+    private CategoriaLogroMapper categoriaLogroMapper;
+
+    @Autowired
+    private LogroMapper logroMapper;
+
+    @Autowired
+    private BoletinMapper boletinMapper;
+
+    @Autowired
+    private LogroBoletinMapper logroBoletinMapper;
 
     @GetMapping("/profesor")
     public String profesor(@SessionAttribute(value = "usuario", required = false) Usuario usuario, Model model) {
@@ -415,7 +436,7 @@ public class ProfesorController {
     }
 
     /**
-     * API REST: Obtener todos los estudiantes con información de usuario
+     * API REST: Obtener estudiantes del grupo del profesor
      */
     @GetMapping("/profesor/api/estudiantes")
     @ResponseBody
@@ -425,7 +446,22 @@ public class ProfesorController {
         }
 
         try {
-            List<Estudiante> estudiantes = estudianteMapper.listarEstudiantes();
+            // Obtener el profesor
+            Profesor profesor = profesorMapper.findByIdUsuario(usuario.getIdUsuario()).orElse(null);
+            if (profesor == null) {
+                return new java.util.ArrayList<>();
+            }
+
+            // Obtener el grupo del profesor
+            var grupoProfesor = grupoMapper.findByIdProfesor(profesor.getIdProfesor()).orElse(null);
+            if (grupoProfesor == null) {
+                return new java.util.ArrayList<>();
+            }
+
+            // Filtrar estudiantes solo del grupo del profesor
+            List<Estudiante> estudiantes = estudianteMapper.listarEstudiantes().stream()
+                .filter(e -> e.getIdGrupo() != null && e.getIdGrupo() == grupoProfesor.getIdGrupo())
+                .collect(Collectors.toList());
             return estudiantes.stream()
                 .map(est -> {
                     java.util.Map<String, Object> map = new java.util.HashMap<>();
@@ -462,22 +498,17 @@ public class ProfesorController {
                     usuarioMap.put("nombreCompleto", nombreCompleto);
                     map.put("usuario", usuarioMap);
 
-                    // Obtener nombre del grado para el grupo
-                    if (est.getIdGrupo() != null) {
-                        try {
-                            var grupo = grupoMapper.findById(est.getIdGrupo()).orElse(null);
-                            if (grupo != null) {
-                                var grado = gradoMapper.findById(grupo.getIdGrado()).orElse(null);
-                                if (grado != null) {
-                                    map.put("nombreGrado", grado.getNombre());
-                                    map.put("nombreGrupo", grado.getNombre() + " " + grupo.getNombre());
-                                } else {
-                                    map.put("nombreGrupo", grupo.getNombre());
-                                }
-                            }
-                        } catch (Exception e) {
-                            System.err.println("Error al obtener grupo: " + e.getMessage());
+                    // Obtener nombre del grado para el grupo del profesor
+                    try {
+                        var grado = gradoMapper.findById(grupoProfesor.getIdGrado()).orElse(null);
+                        if (grado != null) {
+                            map.put("nombreGrado", grado.getNombre());
+                            map.put("nombreGrupo", grado.getNombre() + " " + grupoProfesor.getNombre());
+                        } else {
+                            map.put("nombreGrupo", grupoProfesor.getNombre());
                         }
+                    } catch (Exception e) {
+                        map.put("nombreGrupo", "Sin grupo");
                     }
 
                     return map;
@@ -663,6 +694,417 @@ public class ProfesorController {
             e.printStackTrace();
             response.put("success", false);
             response.put("message", "Error al obtener anotaciones: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    // ========================================
+    // ENDPOINTS PARA GESTIÓN DE LOGROS
+    // ========================================
+
+    /**
+     * API REST: Obtener todas las categorías de logros
+     */
+    @GetMapping("/profesor/api/categorias-logros")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerCategoriasLogros(
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            List<CategoriaLogro> categorias = categoriaLogroMapper.findAll();
+
+            List<java.util.Map<String, Object>> categoriasData = categorias.stream()
+                .map(c -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idCategoria", c.getIdCategoria());
+                    map.put("nombre", c.getNombre());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("categorias", categoriasData);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener categorías de logros: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener categorías: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener logros por categoría
+     */
+    @GetMapping("/profesor/api/logros/categoria/{idCategoria}")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerLogrosPorCategoria(
+            @PathVariable int idCategoria,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            List<Logro> logros = logroMapper.findByCategoria(idCategoria);
+
+            List<java.util.Map<String, Object>> logrosData = logros.stream()
+                .map(l -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idLogro", l.getIdLogro());
+                    map.put("descripcion", l.getDescripcion());
+                    map.put("valoracion", l.getValoracion());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("logros", logrosData);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener logros: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener logros: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener todos los logros de todas las categorías
+     */
+    @GetMapping("/profesor/api/logros")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerTodosLosLogros(
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            List<Logro> logros = logroMapper.findAll();
+
+            List<java.util.Map<String, Object>> logrosData = logros.stream()
+                .map(l -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idLogro", l.getIdLogro());
+                    map.put("idCategoria", l.getIdCategoria());
+                    map.put("descripcion", l.getDescripcion());
+                    map.put("valoracion", l.getValoracion());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("logros", logrosData);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener logros: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener logros: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener las valoraciones de logros de un estudiante
+     */
+    @GetMapping("/profesor/api/estudiante/{idEstudiante}/logros")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerLogrosEstudiante(
+            @PathVariable int idEstudiante,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Obtener el estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            // Obtener o crear el boletín del estudiante
+            Integer idHistorialAcademico = estudiante.getIdHistorialAcademico();
+            if (idHistorialAcademico == null) {
+                response.put("success", true);
+                response.put("logros", new java.util.ArrayList<>());
+                response.put("message", "El estudiante no tiene historial académico");
+                return response;
+            }
+
+            Boletin boletin = boletinMapper.findOrCreateByHistorialAcademico(idHistorialAcademico);
+
+            // Obtener las valoraciones de logros del boletín
+            List<LogroBoletin> logrosBoletines = logroBoletinMapper.findByBoletin(boletin.getIdBoletin());
+
+            List<java.util.Map<String, Object>> logrosData = logrosBoletines.stream()
+                .map(lb -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("idLogroBoletin", lb.getIdLogroBoletin());
+                    map.put("idLogro", lb.getIdLogro());
+                    map.put("valoracion", lb.getValoracion());
+                    map.put("comentario", lb.getComentario());
+
+                    // Obtener información del logro
+                    if (lb.getIdLogro() != null) {
+                        logroMapper.findById(lb.getIdLogro()).ifPresent(logro -> {
+                            map.put("descripcionLogro", logro.getDescripcion());
+                            map.put("idCategoria", logro.getIdCategoria());
+                        });
+                    }
+
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("logros", logrosData);
+            response.put("idBoletin", boletin.getIdBoletin());
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener logros del estudiante: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener logros: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * POST: Guardar o actualizar valoración de un logro para un estudiante
+     * Requiere que se califiquen los 12 logros antes de crear el boletín
+     * IMPORTANTE: Solo crea el boletín cuando se asegura que hay datos válidos
+     */
+    @PostMapping("/profesor/api/estudiante/{idEstudiante}/logro/guardar")
+    @ResponseBody
+    public java.util.Map<String, Object> guardarValoracionLogro(
+            @PathVariable int idEstudiante,
+            @RequestParam int idLogro,
+            @RequestParam String valoracion,
+            @RequestParam(required = false) Integer periodo,
+            @RequestParam(required = false) String comentario,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Validar periodo PRIMERO - NO crear boletín si periodo es inválido
+            if (periodo == null || periodo < 1 || periodo > 4) {
+                response.put("success", false);
+                response.put("message", "Debe seleccionar un periodo académico válido (1-4)");
+                return response;
+            }
+
+            // Validar valoración no vacía
+            if (valoracion == null || valoracion.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "La valoración no puede estar vacía");
+                return response;
+            }
+
+            // Validar que el logro existe
+            Logro logro = logroMapper.findById(idLogro).orElse(null);
+            if (logro == null) {
+                response.put("success", false);
+                response.put("message", "Logro no encontrado");
+                return response;
+            }
+
+            // Obtener el estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            // Verificar historial académico
+            Integer idHistorialAcademico = estudiante.getIdHistorialAcademico();
+            if (idHistorialAcademico == null) {
+                response.put("success", false);
+                response.put("message", "El estudiante no tiene historial académico");
+                return response;
+            }
+
+            // AHORA SÍ: Crear o buscar el boletín SOLO después de todas las validaciones
+            Boletin boletin = boletinMapper.findOrCreateByHistorialAcademicoAndPeriodo(idHistorialAcademico, periodo);
+
+            // Buscar si ya existe una valoración para este logro y boletín
+            Optional<LogroBoletin> logroBoletinExistente =
+                logroBoletinMapper.findByLogroAndBoletin(idLogro, boletin.getIdBoletin());
+
+            LogroBoletin logroBoletin;
+            if (logroBoletinExistente.isPresent()) {
+                // Actualizar existente
+                logroBoletin = logroBoletinExistente.get();
+                logroBoletin.setValoracion(valoracion);
+                logroBoletin.setComentario(comentario);
+                logroBoletin = logroBoletinMapper.update(logroBoletin);
+            } else {
+                // Crear nuevo
+                logroBoletin = new LogroBoletin(idLogro, boletin.getIdBoletin(), valoracion);
+                logroBoletin.setComentario(comentario);
+                logroBoletin = logroBoletinMapper.save(logroBoletin);
+            }
+
+            response.put("success", true);
+            response.put("message", "Valoración guardada exitosamente");
+            response.put("idLogroBoletin", logroBoletin.getIdLogroBoletin());
+
+        } catch (Exception e) {
+            System.err.println("Error al guardar valoración: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al guardar valoración: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener periodos académicos ya registrados para un estudiante
+     */
+    @GetMapping("/profesor/api/estudiante/{idEstudiante}/periodos-registrados")
+    @ResponseBody
+    public java.util.Map<String, Object> obtenerPeriodosRegistrados(
+            @PathVariable int idEstudiante,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Obtener el estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            Integer idHistorialAcademico = estudiante.getIdHistorialAcademico();
+            if (idHistorialAcademico == null) {
+                response.put("success", true);
+                response.put("periodos", new java.util.ArrayList<>());
+                return response;
+            }
+
+            // Obtener todos los boletines del estudiante
+            List<Boletin> boletines = boletinMapper.findByHistorialAcademico(idHistorialAcademico);
+
+            // Extraer los periodos registrados (que tengan 12 logros)
+            List<Integer> periodosRegistrados = new java.util.ArrayList<>();
+            for (Boletin boletin : boletines) {
+                if (boletin.getPeriodo() != null) {
+                    // Contar logros del boletín
+                    List<LogroBoletin> logrosBoletines = logroBoletinMapper.findByBoletin(boletin.getIdBoletin());
+                    // Solo incluir si tiene los 12 logros completos
+                    if (logrosBoletines.size() >= 12) {
+                        periodosRegistrados.add(boletin.getPeriodo());
+                    }
+                }
+            }
+
+            response.put("success", true);
+            response.put("periodos", periodosRegistrados);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener periodos registrados: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener periodos: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * POST: Crear un nuevo logro
+     */
+    @PostMapping("/profesor/api/logro/crear")
+    @ResponseBody
+    public java.util.Map<String, Object> crearLogro(
+            @RequestParam int idCategoria,
+            @RequestParam String descripcion,
+            @RequestParam(required = false) String valoracion,
+            @SessionAttribute(value = "usuario", required = false) Usuario usuario) {
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+
+        try {
+            if (usuario == null) {
+                response.put("success", false);
+                response.put("message", "Usuario no autenticado");
+                return response;
+            }
+
+            // Validar que la categoría existe
+            CategoriaLogro categoria = categoriaLogroMapper.findById(idCategoria).orElse(null);
+            if (categoria == null) {
+                response.put("success", false);
+                response.put("message", "Categoría no encontrada");
+                return response;
+            }
+
+            // Crear el logro
+            Logro logro = new Logro(idCategoria, descripcion);
+            logro.setValoracion(valoracion);
+            logro = logroMapper.save(logro);
+
+            response.put("success", true);
+            response.put("message", "Logro creado exitosamente");
+            response.put("idLogro", logro.getIdLogro());
+
+        } catch (Exception e) {
+            System.err.println("Error al crear logro: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al crear logro: " + e.getMessage());
         }
 
         return response;
