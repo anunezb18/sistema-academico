@@ -350,13 +350,13 @@
                 <span class="menu-item-icon">👁️</span>
                 <span>Observador</span>
             </a>
-            <a href="#" class="menu-item" onclick="mostrarPanel('historial'); return false;">
-                <span class="menu-item-icon">📊</span>
-                <span>Historial Académico</span>
-            </a>
             <a href="#" class="menu-item" onclick="mostrarPanel('hoja-vida'); return false;">
                 <span class="menu-item-icon">📋</span>
                 <span>Hoja de Vida</span>
+            </a>
+            <a href="#" class="menu-item" onclick="mostrarPanel('logros'); return false;">
+                <span class="menu-item-icon">🎓</span>
+                <span>Consultar Logros</span>
             </a>
             <a href="#" class="menu-item" onclick="mostrarPanel('enviar-correo'); return false;">
                 <span class="menu-item-icon">📧</span>
@@ -656,38 +656,94 @@
         <div id="panel-observador" class="panel">
             <div class="top-bar">
                 <div class="welcome-text">
-                    <h2>👁️ Observador del Estudiante</h2>
-                    <p>Registro de comportamiento y seguimiento académico</p>
+                    <h2>👁️ Mi Observador</h2>
+                    <p>Registro de anotaciones y seguimiento académico</p>
                 </div>
             </div>
-            <div class="card">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Contenido del observador en desarrollo...</p>
+
+            <!-- Tarjetas de anotaciones -->
+            <div id="anotacionesContainer" class="card">
+                <div style="text-align: center; padding: 40px; color: #78909c;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                    <p>Cargando anotaciones...</p>
+                </div>
             </div>
         </div>
 
-        <!-- Panel Historial Académico -->
-        <div id="panel-historial" class="panel">
-            <div class="top-bar">
-                <div class="welcome-text">
-                    <h2>📊 Historial Académico</h2>
-                    <p>Consulta tus calificaciones y desempeño académico</p>
-                </div>
-            </div>
-            <div class="card">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Historial académico en desarrollo...</p>
-            </div>
-        </div>
 
         <!-- Panel Hoja de Vida -->
         <div id="panel-hoja-vida" class="panel">
             <div class="top-bar">
                 <div class="welcome-text">
-                    <h2>📋 Hoja de Vida</h2>
-                    <p>Información personal y documentación</p>
+                    <h2>📋 Mi Hoja de Vida</h2>
+                    <p>Información personal y académica</p>
                 </div>
             </div>
+
+            <!-- Información del estudiante -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 30px; align-items: start;">
+                    <!-- Foto del estudiante -->
+                    <div style="flex-shrink: 0;">
+                        <img src="/foto-de-perfil.png" alt="Foto de perfil"
+                             style="width: 180px; height: 180px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid #4dd0e1;">
+                    </div>
+
+                    <!-- Información personal -->
+                    <div style="flex: 1;">
+                        <h3 style="color: #00838f; margin-bottom: 20px; font-size: 24px;">Información Personal</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" id="infoPersonalContainer">
+                            <div style="text-align: center; padding: 40px; color: #78909c;">
+                                <p>Cargando información...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Académica -->
             <div class="card">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Hoja de vida en desarrollo...</p>
+                <h3 style="color: #00838f; margin-bottom: 20px; font-size: 20px;">📚 Información Académica</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" id="infoAcademicaContainer">
+                    <div style="text-align: center; padding: 40px; color: #78909c;">
+                        <p>Cargando información...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Consultar Logros -->
+        <div id="panel-logros" class="panel">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>🎓 Mis Logros Académicos</h2>
+                    <p>Consulta tus logros y desempeño por periodo</p>
+                </div>
+            </div>
+
+            <!-- Selector de periodo -->
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 style="color: #00838f; margin-bottom: 15px; font-size: 18px;">📅 Seleccionar Periodo</h3>
+                <select id="selectPeriodoLogros"
+                        onchange="cargarLogrosEstudiante()"
+                        style="width: 100%; padding: 12px 20px; border: 2px solid #4dd0e1; border-radius: 8px; font-size: 15px; background: white; cursor: pointer;">
+                    <option value="">Seleccione un periodo académico</option>
+                    <option value="1">1er Periodo</option>
+                    <option value="2">2do Periodo</option>
+                    <option value="3">3er Periodo</option>
+                    <option value="4">4to Periodo</option>
+                </select>
+            </div>
+
+            <!-- Contenedor de logros -->
+            <div id="logrosContainer">
+                <div class="card">
+                    <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+                        <h3 style="color: #546e7a; margin-bottom: 10px;">Selecciona un periodo</h3>
+                        <p>Elige un periodo académico arriba para ver tus logros y valoraciones</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -931,6 +987,431 @@
                 });
             }
         });
+
+        // ========================================
+        // FUNCIONES PARA CARGAR INFORMACIÓN DEL ESTUDIANTE
+        // ========================================
+
+        // Variable global para almacenar datos del estudiante
+        let datosEstudiante = null;
+
+        // Cargar información al cambiar de panel
+        function mostrarPanel(panelId) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Mostrar el panel seleccionado
+            document.getElementById('panel-' + panelId).classList.add('active');
+
+            // Actualizar menú activo
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+
+            // Cargar datos según el panel
+            if (panelId === 'observador') {
+                cargarObservadorEstudiante();
+            } else if (panelId === 'hoja-vida') {
+                cargarHojaVidaEstudiante();
+            } else if (panelId === 'logros') {
+                // Resetear selector de periodo
+                document.getElementById('selectPeriodoLogros').value = '';
+                document.getElementById('logrosContainer').innerHTML = `
+                    <div class="card">
+                        <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+                            <h3 style="color: #546e7a; margin-bottom: 10px;">Selecciona un periodo</h3>
+                            <p>Elige un periodo académico arriba para ver tus logros y valoraciones</p>
+                        </div>
+                    </div>
+                `;
+            } else if (panelId === 'enviar-correo') {
+                cargarDestinatarios();
+                mostrarSeccionDestinatarios();
+            }
+        }
+
+        // ========================================
+        // CARGAR OBSERVADOR
+        // ========================================
+        async function cargarObservadorEstudiante() {
+            const container = document.getElementById('anotacionesContainer');
+
+            try {
+                const response = await fetch('/estudiante/api/observador');
+                if (!response.ok) throw new Error('Error al cargar observador');
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #ef5350;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <p>${data.message || 'Error al cargar el observador'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const anotaciones = data.anotaciones || [];
+
+                if (anotaciones.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">✨</div>
+                            <h3 style="color: #546e7a; margin-bottom: 10px;">¡Sin anotaciones!</h3>
+                            <p>No tienes ninguna anotación en tu observador.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Mostrar anotaciones
+                let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
+
+                anotaciones.forEach(anotacion => {
+                    // Formatear fecha
+                    const fechaParts = anotacion.fecha.split('-');
+                    const fecha = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2]);
+                    const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+                    const fechaFormateada = fecha.toLocaleDateString('es-ES', opciones);
+
+                    // Iconos y colores por tipo
+                    const tiposConfig = {
+                        'Felicitación': { icon: '🌟', color: '#4caf50', bg: '#e8f5e9' },
+                        'Observación Académica': { icon: '📚', color: '#2196f3', bg: '#e3f2fd' },
+                        'Observación Disciplinaria': { icon: '⚠️', color: '#ff9800', bg: '#fff3e0' },
+                        'Llamado de Atención': { icon: '⚡', color: '#f44336', bg: '#ffebee' },
+                        'Otro': { icon: '📝', color: '#9e9e9e', bg: '#f5f5f5' }
+                    };
+
+                    const config = tiposConfig[anotacion.tipo] || tiposConfig['Otro'];
+
+                    html += `
+                        <div style="background: white; border-left: 5px solid ${config.color}; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 50px; height: 50px; background: ${config.bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                        ${config.icon}
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; color: ${config.color}; font-size: 18px; font-weight: 600;">${anotacion.tipo}</h4>
+                                        <p style="margin: 4px 0 0 0; color: #78909c; font-size: 13px;">📅 ${fechaFormateada}</p>
+                                    </div>
+                                </div>
+                                <span style="background: ${config.color}; color: white; padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">#${anotacion.idAnotacion}</span>
+                            </div>
+                            <p style="margin: 0; color: #546e7a; font-size: 15px; line-height: 1.6;">${anotacion.descripcion}</p>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef5350;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                        <p>Error al cargar las anotaciones</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ========================================
+        // CARGAR HOJA DE VIDA
+        // ========================================
+        async function cargarHojaVidaEstudiante() {
+            try {
+                const response = await fetch('/estudiante/api/hoja-vida');
+                if (!response.ok) throw new Error('Error al cargar hoja de vida');
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    mostrarErrorHojaVida(data.message);
+                    return;
+                }
+
+                // Guardar datos globalmente
+                datosEstudiante = data;
+
+                // Mostrar información personal
+                mostrarInfoPersonal(data);
+
+                // Mostrar información académica
+                mostrarInfoAcademica(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorHojaVida('Error al cargar la información');
+            }
+        }
+
+        function mostrarInfoPersonal(data) {
+            const container = document.getElementById('infoPersonalContainer');
+
+            html = `
+                <div style="background: #e0f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4dd0e1;">
+                    <p style="margin: 0; color: #00838f; font-size: 12px; font-weight: 600; text-transform: uppercase;">Nombre Completo</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.nombreCompleto || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e0f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4dd0e1;">
+                    <p style="margin: 0; color: #00838f; font-size: 12px; font-weight: 600; text-transform: uppercase;">Correo</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.correo || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e0f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4dd0e1;">
+                    <p style="margin: 0; color: #00838f; font-size: 12px; font-weight: 600; text-transform: uppercase;">Teléfono</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.telefono || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e0f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4dd0e1;">
+                    <p style="margin: 0; color: #00838f; font-size: 12px; font-weight: 600; text-transform: uppercase;">Dirección</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.direccion || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e0f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4dd0e1;">
+                    <p style="margin: 0; color: #00838f; font-size: 12px; font-weight: 600; text-transform: uppercase;">Fecha de Nacimiento</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.fechaNacimiento || 'N/A'}</p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function mostrarInfoAcademica(data) {
+            const container = document.getElementById('infoAcademicaContainer');
+
+            const html = `
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #66bb6a;">
+                    <p style="margin: 0; color: #2e7d32; font-size: 12px; font-weight: 600; text-transform: uppercase;">Grado</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.grado || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #66bb6a;">
+                    <p style="margin: 0; color: #2e7d32; font-size: 12px; font-weight: 600; text-transform: uppercase;">Grupo</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.grupo || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #66bb6a;">
+                    <p style="margin: 0; color: #2e7d32; font-size: 12px; font-weight: 600; text-transform: uppercase;">Profesor a Cargo</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.profesor || 'N/A'}</p>
+                </div>
+
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #66bb6a;">
+                    <p style="margin: 0; color: #2e7d32; font-size: 12px; font-weight: 600; text-transform: uppercase;">Fecha de Ingreso</p>
+                    <p style="margin: 5px 0 0 0; color: #37474f; font-size: 16px; font-weight: 500;">${data.fechaIngreso || 'N/A'}</p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function mostrarErrorHojaVida(mensaje) {
+            const containerPersonal = document.getElementById('infoPersonalContainer');
+            const containerAcademica = document.getElementById('infoAcademicaContainer');
+
+            const errorHtml = `
+                <div style="text-align: center; padding: 40px; color: #ef5350; grid-column: 1 / -1;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                    <p>${mensaje}</p>
+                </div>
+            `;
+
+            containerPersonal.innerHTML = errorHtml;
+            containerAcademica.innerHTML = '';
+        }
+
+        // ========================================
+        // CARGAR LOGROS
+        // ========================================
+        async function cargarLogrosEstudiante() {
+            const periodo = document.getElementById('selectPeriodoLogros').value;
+            const container = document.getElementById('logrosContainer');
+
+            if (!periodo) {
+                container.innerHTML = `
+                    <div class="card">
+                        <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+                            <h3 style="color: #546e7a; margin-bottom: 10px;">Selecciona un periodo</h3>
+                            <p>Elige un periodo académico arriba para ver tus logros y valoraciones</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostrar loading
+            container.innerHTML = `
+                <div class="card">
+                    <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">⏳</div>
+                        <h3 style="color: #546e7a; margin-bottom: 10px;">Cargando logros...</h3>
+                        <p>Por favor espera un momento</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/estudiante/api/logros?periodo=${periodo}`);
+                if (!response.ok) throw new Error('Error al cargar logros');
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    container.innerHTML = `
+                        <div class="card">
+                            <div style="text-align: center; padding: 60px 40px; color: #ef5350;">
+                                <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                                <h3 style="color: #ef5350; margin-bottom: 10px;">Error</h3>
+                                <p>${data.message || 'No se pudieron cargar los logros'}</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const logros = data.logros || [];
+
+                if (logros.length === 0) {
+                    container.innerHTML = `
+                        <div class="card">
+                            <div style="text-align: center; padding: 60px 40px; color: #78909c;">
+                                <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                                <h3 style="color: #546e7a; margin-bottom: 10px;">Sin logros registrados</h3>
+                                <p>No hay logros registrados para el periodo ${periodo}</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Agrupar logros por categoría
+                const logrosPorCategoria = {};
+                logros.forEach(logro => {
+                    if (!logrosPorCategoria[logro.categoria]) {
+                        logrosPorCategoria[logro.categoria] = [];
+                    }
+                    logrosPorCategoria[logro.categoria].push(logro);
+                });
+
+                // Generar HTML
+                let html = '';
+
+                Object.keys(logrosPorCategoria).forEach(categoria => {
+                    const logrosCategoria = logrosPorCategoria[categoria];
+
+                    html += `
+                        <div class="card" style="margin-bottom: 20px;">
+                            <h3 style="color: #00838f; margin-bottom: 20px; font-size: 20px; padding-bottom: 15px; border-bottom: 3px solid #4dd0e1;">
+                                📚 ${categoria}
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                    `;
+
+                    logrosCategoria.forEach(logro => {
+                        // Colores por valoración
+                        const valoracionConfig = {
+                            'Superior': { color: '#4caf50', bg: '#e8f5e9', icon: '🌟' },
+                            'Alto': { color: '#2196f3', bg: '#e3f2fd', icon: '⭐' },
+                            'Básico': { color: '#ff9800', bg: '#fff3e0', icon: '📌' },
+                            'Bajo': { color: '#f44336', bg: '#ffebee', icon: '📍' }
+                        };
+
+                        const config = valoracionConfig[logro.valoracion] || { color: '#9e9e9e', bg: '#f5f5f5', icon: '•' };
+
+                        html += `
+                            <div style="background: ${config.bg}; border-left: 5px solid ${config.color}; border-radius: 8px; padding: 15px;">
+                                <div style="display: flex; justify-content: between; align-items: start; gap: 15px;">
+                                    <div style="flex: 1;">
+                                        <p style="margin: 0 0 8px 0; color: #37474f; font-size: 15px; font-weight: 500; line-height: 1.5;">
+                                            ${logro.descripcion}
+                                        </p>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                                        <span style="font-size: 20px;">${config.icon}</span>
+                                        <span style="background: ${config.color}; color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap;">
+                                            ${logro.valoracion}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+                // Agregar botón de descarga PDF
+                const btnDescarga = document.createElement('div');
+                btnDescarga.style.cssText = 'text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;';
+                btnDescarga.innerHTML = `
+                    <button onclick="descargarBoletinPDF(${periodo})"
+                            style="background: linear-gradient(135deg, #e53935 0%, #c62828 100%); color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(229,57,53,0.4); display: inline-flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📄</span>
+                        Descargar Boletín en PDF
+                    </button>
+                `;
+                container.appendChild(btnDescarga);
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = `
+                    <div class="card">
+                        <div style="text-align: center; padding: 60px 40px; color: #ef5350;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
+                            <h3 style="color: #ef5350; margin-bottom: 10px;">Error de conexión</h3>
+                            <p>No se pudieron cargar los logros. Intenta de nuevo.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ========================================
+        // DESCARGAR BOLETÍN EN PDF
+        // ========================================
+        function descargarBoletinPDF(periodo) {
+            if (!periodo) {
+                alert('⚠️ Debe seleccionar un periodo académico');
+                return;
+            }
+
+            // Mostrar mensaje de descarga
+            const btnDescarga = event.target.closest('button');
+            const textoOriginal = btnDescarga.innerHTML;
+            btnDescarga.disabled = true;
+            btnDescarga.innerHTML = '<span style="font-size: 20px;">⏳</span> Generando PDF...';
+
+            // Crear enlace temporal para descarga
+            const url = `/estudiante/api/logros/pdf?periodo=${periodo}`;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Boletin_Periodo${periodo}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Restaurar botón después de un momento
+            setTimeout(() => {
+                btnDescarga.disabled = false;
+                btnDescarga.innerHTML = textoOriginal;
+            }, 2000);
+        }
+
     </script>
 </body>
 </html>

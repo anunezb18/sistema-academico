@@ -53,21 +53,6 @@ public class ObservadorMapper {
         return Optional.ofNullable(observador);
     }
 
-    /**
-     * Busca un observador por ID de estudiante
-     * @param idEstudiante El ID del estudiante
-     * @return Optional con el observador si existe
-     */
-    public Optional<Observador> findByIdEstudiante(int idEstudiante) {
-        try {
-            TypedQuery<Observador> query = em.createQuery(
-                "SELECT o FROM Observador o WHERE o.idEstudiante = :idEstudiante", Observador.class);
-            query.setParameter("idEstudiante", idEstudiante);
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
 
     /**
      * Obtiene todos los observadores

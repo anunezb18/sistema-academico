@@ -7,6 +7,7 @@ import java.util.List;
  * Entidad Observador
  * Se crea automáticamente cuando se registra un nuevo estudiante
  * Solo contiene el ID del observador y tiene una relación con las anotaciones
+ * Nota: La relación con Estudiante es a través de HistorialAcademico
  */
 @Entity
 @Table(name = "\"Observador\"")
@@ -16,9 +17,6 @@ public class Observador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "\"idObservador\"")
     private int idObservador;
-
-    @Column(name = "\"idEstudiante\"")
-    private Integer idEstudiante;
 
     @OneToMany(mappedBy = "observador", fetch = FetchType.LAZY)
     private List<Anotacion> anotaciones;
@@ -34,13 +32,6 @@ public class Observador {
         this.idObservador = idObservador;
     }
 
-    public Integer getIdEstudiante() {
-        return idEstudiante;
-    }
-
-    public void setIdEstudiante(Integer idEstudiante) {
-        this.idEstudiante = idEstudiante;
-    }
 
     public List<Anotacion> getAnotaciones() {
         return anotaciones;
