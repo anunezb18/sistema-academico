@@ -3,7 +3,10 @@ package com.udistrital.awuis.sistema_academico.controller;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,22 +21,30 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.udistrital.awuis.sistema_academico.model.Aspirante;
+import com.udistrital.awuis.sistema_academico.model.Boletin;
+import com.udistrital.awuis.sistema_academico.model.CategoriaLogro;
 import com.udistrital.awuis.sistema_academico.model.Directivo;
 import com.udistrital.awuis.sistema_academico.model.Entrevista;
 import com.udistrital.awuis.sistema_academico.model.Estudiante;
 import com.udistrital.awuis.sistema_academico.model.Formulario;
 import com.udistrital.awuis.sistema_academico.model.HistorialAcademico;
+import com.udistrital.awuis.sistema_academico.model.Logro;
+import com.udistrital.awuis.sistema_academico.model.LogroBoletin;
 import com.udistrital.awuis.sistema_academico.model.Observador;
 import com.udistrital.awuis.sistema_academico.model.Usuario;
 import com.udistrital.awuis.sistema_academico.repositories.AspiranteMapper;
+import com.udistrital.awuis.sistema_academico.repositories.BoletinMapper;
+import com.udistrital.awuis.sistema_academico.repositories.CategoriaLogroMapper;
 import com.udistrital.awuis.sistema_academico.repositories.DirectivoMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EntrevistaMapper;
 import com.udistrital.awuis.sistema_academico.repositories.EstudianteMapper;
 import com.udistrital.awuis.sistema_academico.repositories.FormularioMapper;
-import com.udistrital.awuis.sistema_academico.repositories.HistorialAcademicoMapper;
-import com.udistrital.awuis.sistema_academico.repositories.ObservadorMapper;
-import com.udistrital.awuis.sistema_academico.repositories.GrupoMapper;
 import com.udistrital.awuis.sistema_academico.repositories.GradoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.GrupoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.HistorialAcademicoMapper;
+import com.udistrital.awuis.sistema_academico.repositories.LogroBoletinMapper;
+import com.udistrital.awuis.sistema_academico.repositories.LogroMapper;
+import com.udistrital.awuis.sistema_academico.repositories.ObservadorMapper;
 import com.udistrital.awuis.sistema_academico.repositories.ProfesorMapper;
 import com.udistrital.awuis.sistema_academico.service.EmailService;
 import com.udistrital.awuis.sistema_academico.service.UsuarioService;
@@ -70,6 +81,18 @@ public class DirectivoController {
 
     @Autowired
     private ProfesorMapper profesorMapper;
+
+    @Autowired
+    private LogroMapper logroMapper;
+
+    @Autowired
+    private LogroBoletinMapper logroBoletinMapper;
+
+    @Autowired
+    private BoletinMapper boletinMapper;
+
+    @Autowired
+    private CategoriaLogroMapper categoriaLogroMapper;
 
     @Autowired
     private EmailService emailService;
@@ -958,6 +981,98 @@ public class DirectivoController {
             e.printStackTrace();
             response.put("success", false);
             response.put("message", "Error al obtener anotaciones: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API REST: Obtener historial académico completo de un estudiante
+     */
+    @GetMapping("/directivo/api/historial/{idEstudiante}")
+    @ResponseBody
+    public Map<String, Object> obtenerHistorialAcademico(@PathVariable int idEstudiante) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Obtener estudiante
+            Estudiante estudiante = estudianteMapper.obtenerPorId(idEstudiante);
+            if (estudiante == null) {
+                response.put("success", false);
+                response.put("message", "Estudiante no encontrado");
+                return response;
+            }
+
+            // Obtener historial académico
+            Integer idHistorialAcademico = estudiante.getIdHistorialAcademico();
+            if (idHistorialAcademico == null) {
+                response.put("success", true);
+                response.put("boletines", new ArrayList<>());
+                response.put("message", "No hay historial académico");
+                return response;
+            }
+
+            // Obtener todos los boletines del historial
+            List<Boletin> boletines = boletinMapper.findByHistorialAcademico(idHistorialAcademico);
+
+            if (boletines.isEmpty()) {
+                response.put("success", true);
+                response.put("boletines", new ArrayList<>());
+                response.put("message", "No hay boletines registrados");
+                return response;
+            }
+
+            // Procesar cada boletín
+            List<Map<String, Object>> boletinesData = new ArrayList<>();
+
+            for (Boletin boletin : boletines) {
+                Map<String, Object> boletinMap = new HashMap<>();
+                boletinMap.put("periodo", boletin.getPeriodo());
+
+                // Obtener logros del boletín
+                List<LogroBoletin> logrosBoletines = logroBoletinMapper.findByBoletin(boletin.getIdBoletin());
+
+                // Agrupar logros por categoría
+                Map<String, List<Map<String, String>>> logrosPorCategoria = new java.util.LinkedHashMap<>();
+
+                for (LogroBoletin lb : logrosBoletines) {
+                    Logro logro = logroMapper.findById(lb.getIdLogro()).orElse(null);
+                    if (logro != null) {
+                        String nombreCategoria = "Sin categoría";
+                        if (logro.getIdCategoria() != null) {
+                            CategoriaLogro categoria = categoriaLogroMapper.findById(logro.getIdCategoria()).orElse(null);
+                            if (categoria != null) {
+                                nombreCategoria = categoria.getNombre();
+                            }
+                        }
+
+                        logrosPorCategoria.putIfAbsent(nombreCategoria, new ArrayList<>());
+                        Map<String, String> logroData = new HashMap<>();
+                        logroData.put("descripcion", logro.getDescripcion());
+                        logroData.put("valoracion", lb.getValoracion());
+                        logrosPorCategoria.get(nombreCategoria).add(logroData);
+                    }
+                }
+
+                boletinMap.put("logrosPorCategoria", logrosPorCategoria);
+                boletinesData.add(boletinMap);
+            }
+
+            // Ordenar boletines por periodo
+            boletinesData.sort((b1, b2) -> {
+                Integer p1 = (Integer) b1.get("periodo");
+                Integer p2 = (Integer) b2.get("periodo");
+                return p1.compareTo(p2);
+            });
+
+            response.put("success", true);
+            response.put("boletines", boletinesData);
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener historial académico: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error al obtener historial académico: " + e.getMessage());
         }
 
         return response;

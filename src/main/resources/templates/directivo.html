@@ -576,13 +576,70 @@
             </div>
         </div>
 
+        <!-- Panel Historial Académico -->
         <div id="panel-historial" class="panel">
             <div class="welcome-message">
                 <h2>📚 Historial Académico</h2>
-                <p>Seguimiento del desempeño académico</p>
+                <p>Consulta el historial completo de desempeño de los estudiantes</p>
             </div>
-            <div class="content-section">
-                <p style="text-align: center; padding: 40px; color: #78909c;">Historial académico en desarrollo...</p>
+
+            <!-- Sección de búsqueda -->
+            <div id="historial-busqueda" class="content-section">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text"
+                           id="buscarHistorialInput"
+                           placeholder="🔍 Buscar por nombre o ID del estudiante..."
+                           style="flex: 1; min-width: 250px; padding: 12px 20px; border: 2px solid #4dd0e1; border-radius: 8px; font-size: 15px;">
+
+                    <select id="filtroGrupoHistorial"
+                            style="padding: 12px 20px; border: 2px solid #4dd0e1; border-radius: 8px; font-size: 15px; background: white; cursor: pointer; min-width: 200px;">
+                        <option value="">📋 Filtrar por grupo</option>
+                    </select>
+
+                    <button onclick="buscarEstudiantesHistorial()"
+                            style="padding: 12px 30px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                        🔍 Buscar
+                    </button>
+                </div>
+
+                <!-- Lista de estudiantes -->
+                <div id="listaEstudiantesHistorial" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div id="mensajeSinResultadosHistorial" style="display: none; text-align: center; padding: 40px; color: #78909c;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                    <p>No se encontraron estudiantes</p>
+                </div>
+            </div>
+
+            <!-- Sección de detalle del historial -->
+            <div id="historial-detalle" class="content-section" style="display: none;">
+                <button onclick="volverBusquedaHistorial()"
+                        style="margin-bottom: 20px; padding: 10px 20px; background: #78909c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    ← Volver a la búsqueda
+                </button>
+
+                <!-- Información del estudiante -->
+                <div id="infoEstudianteHistorial" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <!-- Boletines por periodo -->
+                <div id="boletinesHistorial" style="margin-bottom: 30px;">
+                    <h3 style="color: #00838f; margin-bottom: 15px; font-size: 20px;">📊 Boletines Académicos</h3>
+                    <div id="contenedorBoletines">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Observador del estudiante -->
+                <div id="observadorHistorial">
+                    <h3 style="color: #00838f; margin-bottom: 15px; font-size: 20px;">👁️ Observador del Estudiante</h3>
+                    <div id="contenedorObservador" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1233,6 +1290,7 @@
                 cargarEstudiantesObservador();
             } else if (panelId === 'historial') {
                 document.querySelector('.menu-item[onclick*="historial"]').classList.add('active');
+                cargarPanelHistorial();
             } else if (panelId === 'grupos') {
                 document.querySelector('.menu-item[onclick*="grupos"]').classList.add('active');
                 // Cargar datos del módulo de grupos
@@ -2603,6 +2661,416 @@
             }
         `;
         document.head.appendChild(styleObservador);
+
+        // ========================================
+        // PANEL HISTORIAL ACADÉMICO
+        // ========================================
+
+        let todosLosEstudiantesHistorial = [];
+        let estudianteSeleccionadoHistorial = null;
+
+        // Cargar estudiantes y grupos al cargar el panel
+        async function cargarPanelHistorial() {
+            await cargarGruposHistorial();
+            await cargarEstudiantesHistorial();
+        }
+
+        // Cargar grupos para el filtro
+        async function cargarGruposHistorial() {
+            try {
+                const response = await fetch('/directivo/api/grupos');
+                const grupos = await response.json();
+
+                const select = document.getElementById('filtroGrupoHistorial');
+                select.innerHTML = '<option value="">📋 Todos los grupos</option>';
+
+                if (grupos && grupos.length > 0) {
+                    grupos.forEach(grupo => {
+                        const option = document.createElement('option');
+                        option.value = grupo.idGrupo;
+                        option.textContent = grupo.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar grupos:', error);
+            }
+        }
+
+        // Cargar todos los estudiantes
+        async function cargarEstudiantesHistorial() {
+            try {
+                const response = await fetch('/directivo/api/estudiantes');
+                const estudiantes = await response.json();
+
+                // Transformar los estudiantes al formato esperado
+                todosLosEstudiantesHistorial = estudiantes.map(est => ({
+                    idEstudiante: est.idEstudiante,
+                    nombre: est.usuario?.nombreCompleto || 'Sin nombre',
+                    correo: est.usuario?.correo || 'Sin correo',
+                    idGrupo: est.idGrupo,
+                    grado: est.nombreGrado || '',
+                    grupo: est.nombreGrupo || 'Sin grupo'
+                }));
+
+                mostrarEstudiantesHistorial(todosLosEstudiantesHistorial);
+            } catch (error) {
+                console.error('Error al cargar estudiantes:', error);
+            }
+        }
+
+        // Buscar y filtrar estudiantes
+        function buscarEstudiantesHistorial() {
+            const busqueda = document.getElementById('buscarHistorialInput').value.toLowerCase();
+            const grupoFiltro = document.getElementById('filtroGrupoHistorial').value;
+
+            let estudiantesFiltrados = todosLosEstudiantesHistorial;
+
+            // Filtrar por búsqueda
+            if (busqueda) {
+                estudiantesFiltrados = estudiantesFiltrados.filter(est =>
+                    est.nombre.toLowerCase().includes(busqueda) ||
+                    est.idEstudiante.toString().includes(busqueda)
+                );
+            }
+
+            // Filtrar por grupo
+            if (grupoFiltro) {
+                estudiantesFiltrados = estudiantesFiltrados.filter(est =>
+                    est.idGrupo == grupoFiltro
+                );
+            }
+
+            mostrarEstudiantesHistorial(estudiantesFiltrados);
+        }
+
+        // Mostrar lista de estudiantes
+        function mostrarEstudiantesHistorial(estudiantes) {
+            const container = document.getElementById('listaEstudiantesHistorial');
+            const mensaje = document.getElementById('mensajeSinResultadosHistorial');
+
+            if (!estudiantes || estudiantes.length === 0) {
+                container.innerHTML = '';
+                mensaje.style.display = 'block';
+                return;
+            }
+
+            mensaje.style.display = 'none';
+
+            container.innerHTML = estudiantes.map(est => `
+                <div onclick="verHistorialEstudiante(${est.idEstudiante})"
+                     style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s; border-left: 4px solid #4dd0e1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">
+                            ${est.nombre.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #37474f; font-size: 14px;">${est.nombre}</div>
+                            <div style="font-size: 12px; color: #78909c;">ID: ${est.idEstudiante}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #00838f; font-weight: 500;">
+                        📚 ${est.grado || 'Sin asignar'} - ${est.grupo || 'Sin grupo'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Ver historial de un estudiante
+        async function verHistorialEstudiante(idEstudiante) {
+            estudianteSeleccionadoHistorial = todosLosEstudiantesHistorial.find(e => e.idEstudiante == idEstudiante);
+
+            if (!estudianteSeleccionadoHistorial) {
+                alert('⚠️ Estudiante no encontrado');
+                return;
+            }
+
+            // Cambiar a vista de detalle
+            document.getElementById('historial-busqueda').style.display = 'none';
+            document.getElementById('historial-detalle').style.display = 'block';
+
+            // Cargar información del estudiante
+            mostrarInfoEstudianteHistorial(estudianteSeleccionadoHistorial);
+
+            // Cargar boletines
+            await cargarBoletinesEstudiante(idEstudiante);
+
+            // Cargar observador
+            await cargarObservadorEstudiante(idEstudiante);
+        }
+
+        // Mostrar información del estudiante
+        function mostrarInfoEstudianteHistorial(estudiante) {
+            const container = document.getElementById('infoEstudianteHistorial');
+            container.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 32px;">
+                        ${estudiante.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 10px 0; color: #00838f; font-size: 24px;">${estudiante.nombre}</h3>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <span style="color: #78909c; font-size: 14px;">🆔 ID: ${estudiante.idEstudiante}</span>
+                            <span style="color: #78909c; font-size: 14px;">📚 ${estudiante.grado || 'Sin asignar'}</span>
+                            <span style="color: #78909c; font-size: 14px;">👥 ${estudiante.grupo || 'Sin grupo'}</span>
+                            <span style="color: #78909c; font-size: 14px;">📧 ${estudiante.correo || 'Sin correo'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Cargar boletines del estudiante
+        async function cargarBoletinesEstudiante(idEstudiante) {
+            const container = document.getElementById('contenedorBoletines');
+            container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner"></div><p>Cargando boletines...</p></div>';
+
+            try {
+                const response = await fetch(`/directivo/api/historial/${idEstudiante}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    container.innerHTML = `<p style="text-align: center; color: #ef5350; padding: 20px;">${data.message || 'Error al cargar boletines'}</p>`;
+                    return;
+                }
+
+                const boletines = data.boletines || [];
+
+                if (boletines.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #78909c;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+                            <p>No hay boletines registrados para este estudiante</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Agrupar logros por boletín y categoría
+                container.innerHTML = boletines.map((boletin, index) => {
+                    const periodoNombre = ['1er Periodo', '2do Periodo', '3er Periodo', '4to Periodo'][boletin.periodo - 1] || `Periodo ${boletin.periodo}`;
+
+                    let logrosHTML = '';
+                    for (const [categoria, logros] of Object.entries(boletin.logrosPorCategoria)) {
+                        // Calcular promedio de la categoría
+                        const valoraciones = logros.map(l => l.valoracion);
+                        const promedio = calcularPromedioCategoria(valoraciones);
+
+                        logrosHTML += `
+                            <div style="margin-bottom: 10px;">
+                                <span style="color: #00838f; font-weight: 600;">${categoria}:</span>
+                                <span style="color: ${obtenerColorTextoValoracion(promedio)}; font-weight: 500; margin-left: 10px;">${promedio}</span>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; border-left: 5px solid #4dd0e1;">
+                            <h4 style="margin: 0 0 15px 0; color: #00838f; font-size: 18px;">📊 Boletín ${boletin.periodo} (${periodoNombre})</h4>
+                            ${logrosHTML}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = `<p style="text-align: center; color: #ef5350; padding: 20px;">Error al cargar los boletines</p>`;
+            }
+        }
+
+        // Calcular promedio de una categoría
+        function calcularPromedioCategoria(valoraciones) {
+            const valores = {
+                'Superior': 4,
+                'Alto': 3,
+                'Básico': 2,
+                'Bajo': 1
+            };
+
+            let suma = 0;
+            let count = 0;
+
+            valoraciones.forEach(val => {
+                if (valores[val]) {
+                    suma += valores[val];
+                    count++;
+                }
+            });
+
+            if (count === 0) return 'Sin datos';
+
+            const promedio = suma / count;
+
+            if (promedio >= 3.5) return 'Excelente';
+            if (promedio >= 2.5) return 'Bueno';
+            if (promedio >= 1.5) return 'Regular';
+            return 'Bajo';
+        }
+
+        // Obtener color para el texto de valoración
+        function obtenerColorTextoValoracion(valoracion) {
+            switch (valoracion) {
+                case 'Excelente':
+                case 'Superior':
+                    return '#4caf50';
+                case 'Bueno':
+                case 'Alto':
+                    return '#2196f3';
+                case 'Regular':
+                case 'Básico':
+                    return '#ff9800';
+                case 'Bajo':
+                    return '#f44336';
+                default:
+                    return '#78909c';
+            }
+        }
+
+        // Ver detalles de un boletín específico
+        async function verDetallesBoletin(idEstudiante, periodo) {
+            try {
+                const response = await fetch(`/directivo/api/logros?idEstudiante=${idEstudiante}&periodo=${periodo}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('⚠️ ' + (data.message || 'Error al cargar detalles'));
+                    return;
+                }
+
+                // Crear modal o vista con todos los logros detallados
+                let detallesHTML = `
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 10000; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                        <h3 style="margin: 0 0 20px 0; color: #00838f;">Detalle del Boletín ${periodo}</h3>
+                `;
+
+                const logros = data.logros || [];
+                const logrosPorCategoria = {};
+
+                logros.forEach(logro => {
+                    if (!logrosPorCategoria[logro.categoria]) {
+                        logrosPorCategoria[logro.categoria] = [];
+                    }
+                    logrosPorCategoria[logro.categoria].push(logro);
+                });
+
+                for (const [categoria, logrosCategoria] of Object.entries(logrosPorCategoria)) {
+                    detallesHTML += `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #00838f; margin-bottom: 10px;">${categoria}</h4>
+                            ${logrosCategoria.map(l => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: #f5f5f5; border-radius: 6px; margin-bottom: 5px;">
+                                    <span style="flex: 1;">${l.descripcion}</span>
+                                    <span style="font-weight: 600; color: ${obtenerColorTextoValoracion(l.valoracion)};">${l.valoracion}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                detallesHTML += `
+                        <button onclick="cerrarModalDetalles()"
+                                style="margin-top: 20px; padding: 10px 20px; background: #78909c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Cerrar
+                        </button>
+                    </div>
+                    <div onclick="cerrarModalDetalles()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999;"></div>
+                `;
+
+                const modal = document.createElement('div');
+                modal.id = 'modalDetallesBoletin';
+                modal.innerHTML = detallesHTML;
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al cargar detalles del boletín');
+            }
+        }
+
+        function cerrarModalDetalles() {
+            const modal = document.getElementById('modalDetallesBoletin');
+            if (modal) modal.remove();
+        }
+
+        // Cargar observador del estudiante
+        async function cargarObservadorEstudiante(idEstudiante) {
+            const container = document.getElementById('contenedorObservador');
+            container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner"></div><p>Cargando observador...</p></div>';
+
+            try {
+                const response = await fetch(`/directivo/api/observador/${idEstudiante}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    container.innerHTML = `<p style="text-align: center; color: #ef5350; padding: 20px;">${data.message || 'Error al cargar observador'}</p>`;
+                    return;
+                }
+
+                const anotaciones = data.anotaciones || [];
+
+                if (anotaciones.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #78909c;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">✨</div>
+                            <p>No hay anotaciones en el observador</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '<div style="display: flex; flex-direction: column; gap: 15px;">' +
+                    anotaciones.map(anotacion => {
+                        const tiposConfig = {
+                            'Felicitación': { icon: '🌟', color: '#4caf50', bg: '#e8f5e9' },
+                            'Observación Académica': { icon: '📚', color: '#2196f3', bg: '#e3f2fd' },
+                            'Observación Disciplinaria': { icon: '⚠️', color: '#ff9800', bg: '#fff3e0' },
+                            'Llamado de Atención': { icon: '⚡', color: '#f44336', bg: '#ffebee' },
+                            'Otro': { icon: '📝', color: '#9e9e9e', bg: '#f5f5f5' }
+                        };
+
+                        const config = tiposConfig[anotacion.tipo] || tiposConfig['Otro'];
+
+                        return `
+                            <div style="background: white; border-left: 5px solid ${config.color}; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; background: ${config.bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                            ${config.icon}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; color: ${config.color}; font-size: 15px;">${anotacion.tipo}</div>
+                                            <div style="color: #78909c; font-size: 12px; margin-top: 2px;">📅 ${anotacion.fecha}</div>
+                                        </div>
+                                    </div>
+                                    <span style="background: ${config.color}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">#${anotacion.idAnotacion}</span>
+                                </div>
+                                <p style="margin: 0; color: #546e7a; font-size: 14px; line-height: 1.5;">${anotacion.descripcion}</p>
+                            </div>
+                        `;
+                    }).join('') +
+                '</div>';
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = `<p style="text-align: center; color: #ef5350; padding: 20px;">Error al cargar el observador</p>`;
+            }
+        }
+
+        // Volver a la búsqueda
+        function volverBusquedaHistorial() {
+            document.getElementById('historial-busqueda').style.display = 'block';
+            document.getElementById('historial-detalle').style.display = 'none';
+            estudianteSeleccionadoHistorial = null;
+        }
+
+        // Event listeners para búsqueda en tiempo real
+        document.getElementById('buscarHistorialInput')?.addEventListener('input', function() {
+            buscarEstudiantesHistorial();
+        });
+
+        document.getElementById('filtroGrupoHistorial')?.addEventListener('change', function() {
+            buscarEstudiantesHistorial();
+        });
 
     </script>
 </body>
